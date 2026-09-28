@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>하루이음</title>
+    <!-- 글꼴은 main.ts 에서 @fontsource 패키지로 포함 (CDN 제거) -->
+    <!-- Tailwind는 src/tailwind.css + tailwind.config.js 로 빌드에 포함됨 (CDN 제거) -->
+    <style>
+        :root { --brand-50: #eef2ff; --brand-100: #e0e7ff; --brand-300: #a5b4fc; --brand-400: #818cf8; --brand-500: #6366f1; --brand-600: #4f46e5; --brand-700: #4338ca; --brand-800: #3730a3; }
+        [data-theme="green"] { --brand-50: #ecfdf5; --brand-100: #d1fae5; --brand-300: #6ee7b7; --brand-400: #34d399; --brand-500: #10b981; --brand-600: #059669; --brand-700: #047857; --brand-800: #064e3b; }
+        [data-theme="orange"] { --brand-50: #fff7ed; --brand-100: #ffedd5; --brand-300: #fdba74; --brand-400: #fb923c; --brand-500: #f97316; --brand-600: #ea580c; --brand-700: #c2410c; --brand-800: #7c2d12; }
+        [data-theme="pink"] { --brand-50: #fdf2f8; --brand-100: #fce7f3; --brand-300: #f9a8d4; --brand-400: #f472b6; --brand-500: #ec4899; --brand-600: #db2777; --brand-700: #be185d; --brand-800: #831843; }
+        [data-theme="purple"] { --brand-50: #faf5ff; --brand-100: #f3e8ff; --brand-300: #d8b4fe; --brand-400: #c084fc; --brand-500: #a855f7; --brand-600: #9333ea; --brand-700: #7e22ce; --brand-800: #581c87; }
+        [data-theme="teal"] { --brand-50: #f0fdfa; --brand-100: #ccfbf1; --brand-300: #5eead4; --brand-400: #2dd4bf; --brand-500: #14b8a6; --brand-600: #0d9488; --brand-700: #0f766e; --brand-800: #115e59; }
+        @keyframes bounce-short { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
+        .animate-bounce-short { animation: bounce-short 1s ease-out 1; }
+        @keyframes pop-in { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-pop-in { animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        #notepad-editor { position: relative; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .modal { display: none; } .modal.active { display: flex; }
+        
+        body { transition: background-color 0.5s ease; letter-spacing: 0.04em; }
+        /* --panel-bg 기본값과 바탕색은 src/skins.css 의 디자인 테마가 정함 */
+        .font-black { font-weight: 800 !important; }
+        .font-extrabold { font-weight: 700 !important; }
+        .font-bold { font-weight: 600 !important; }
+
+        .panel-bg { background-color: var(--panel-bg); transition: background-color 0.5s ease; }
+/* 학습 약속 인디케이터 및 팝업 스타일 */
+#activity-indicator {
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#activity-indicator:hover {
+    transform: scale(1.05); /* 터치하거나 마우스 올리면 살짝 커짐 */
+}
+#activity-menu button {
+    transition: all 0.2s;
+}
+#activity-menu button:active {
+    transform: scale(0.9); /* 버튼 누를 때 눌리는 효과 */
+}
+    </style>
+</head>
+<body class="font-sans text-slate-800 h-screen flex flex-col overflow-hidden text-[1.125rem]" data-theme="default">
+
+    <!-- HEADER -->
+    <header class="flex items-center justify-between px-8 py-5 bg-white shadow-sm z-10 shrink-0">
+        <div class="flex items-center space-x-6">
+            <h1 onclick="showVersionInfo()" class="text-4xl font-bold text-brand-700 tracking-tight flex items-center cursor-pointer hover:opacity-80 select-none" title="버전 정보 보기">
+                <i data-lucide="monitor-play" class="mr-3 w-10 h-10"></i>하루이음
+            </h1>
+            <div onclick="openWeather()" class="flex items-center space-x-5 bg-slate-50 hover:bg-slate-100 cursor-pointer px-5 py-3 rounded-2xl border border-slate-200 shadow-sm transition-colors" title="상세 날씨 보기">
+                <div class="flex items-center text-xl font-bold text-slate-700">
+                    <span id="header-weather-icon-container"><i data-lucide="loader-2" class="mr-2 text-slate-400 w-6 h-6 animate-spin"></i></span>
+                    <span id="header-weather-text">날씨 확인 중...</span>
+                </div>
+                <div class="w-px h-6 bg-slate-200"></div>
+                <div class="flex items-center text-lg font-bold text-slate-500" id="header-dust-container">
+                    <i data-lucide="wind" class="mr-2 w-6 h-6"></i>
+                    <span id="header-dust-text">미세먼지 확인 중</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                <button id="btn-always-on-top" onclick="toggleAlwaysOnTop()" class="px-4 py-2 hover:bg-white text-slate-600 hover:text-brand-600 rounded-lg text-lg font-bold transition flex items-center shadow-sm" title="항상 위">
+                    <i data-lucide="pin" class="w-5 h-5 mr-1.5"></i>항상위
+                </button>
+                <div class="w-px bg-slate-300 mx-1.5"></div>
+                <button onclick="toggleFullscreen()" class="px-4 py-2 hover:bg-white text-slate-600 hover:text-brand-600 rounded-lg text-lg font-bold transition flex items-center shadow-sm" title="전체 화면">
+                    <i data-lucide="maximize" class="w-5 h-5 mr-1.5"></i>최대화
+                </button>
+            </div>
+            <div onclick="openCalendar()" class="flex items-center text-slate-700 font-bold bg-slate-50 hover:bg-slate-100 cursor-pointer px-6 py-3 rounded-xl border border-slate-200 shadow-sm transition-colors text-2xl" title="달력 보기">
+                <i data-lucide="calendar" class="mr-3 w-8 h-8 text-brand-500"></i>
+                <span id="current-date-text"></span>
+            </div>
+            
+            <div class="w-[20rem] text-center shrink-0 flex justify-center">
+                <div onclick="openTimeSettingsModal()" class="text-5xl font-bold text-slate-800 tracking-tighter cursor-pointer hover:text-brand-600 transition-colors inline-block tabular-nums whitespace-nowrap" id="current-time-text" title="시간 및 지정 알람 설정" style="font-family: 'Nanum Gothic', sans-serif;">
+                    00:00:00
+                </div>
+            </div>
+
+            <button onclick="openSettingsModal()" class="p-4 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-colors shadow-md flex items-center justify-center" title="환경 설정">
+                <i data-lucide="settings" class="w-7 h-7"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div id="main-layout-container" class="flex flex-1 overflow-hidden p-4 gap-4 h-full relative transition-all duration-500">
+        <!-- 시간표 판넬 -->
+        <div class="w-[32%] panel-bg rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden min-w-[25rem] max-w-[27.5rem]">
+            <div class="bg-brand-600 px-5 py-3 text-white flex justify-between items-center shrink-0 transition-colors duration-300">
+                <div class="flex items-center shrink-0">
+                    <h2 class="font-bold text-2xl flex items-center mr-3 whitespace-nowrap">
+                        <i data-lucide="clock" class="mr-2 w-6 h-6 shrink-0"></i>오늘의 시간표
+                    </h2>
+                </div>
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="flex items-center space-x-2 bg-slate-800/40 px-3 py-1.5 rounded-xl min-w-0" title="알람 볼륨">
+                        <i data-lucide="volume-2" class="w-5 h-5 shrink-0"></i>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" class="w-16 min-w-[2rem] shrink h-1 cursor-pointer accent-white">
+                        <span id="volume-val" class="text-sm font-bold text-white w-9 text-right tabular-nums">50%</span>
+                    </div>
+                    <button onclick="openAlarmSettingsModal()" class="p-1.5 hover:bg-slate-800/40 rounded-xl transition-colors" title="교시 알람 상세 설정">
+                        <i data-lucide="bell-ring" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="timetable-container" class="p-3 flex-1 flex flex-col justify-between gap-1.5 overflow-y-auto"></div>
+        </div>
+
+        <!-- 툴바 + 칠판 영역 -->
+        <div id="right-layout-container" class="flex-1 flex flex-col gap-4 min-w-0 relative transition-all duration-500">
+            <!-- TOOLBAR -->
+            <div class="panel-bg rounded-3xl shadow-sm border border-slate-200 p-3 px-5 flex items-center gap-4 shrink-0 overflow-hidden">
+                <div id="toolbar-tools" class="flex items-center gap-4 flex-1">
+                    <button id="btn-tool-picker" onclick="pickRandomNumber()" class="group flex items-center px-6 py-4 bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer">
+                        <i data-lucide="dices" class="mr-3 w-8 h-8 group-hover:animate-bounce-short"></i> 뽑기
+                    </button>
+                    <button id="btn-tool-timer" onclick="toggleTimerPopup()" class="group flex items-center px-6 py-4 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer">
+                        <i data-lucide="timer" class="mr-3 w-8 h-8 group-hover:rotate-12 transition-transform"></i> 타이머
+                    </button>
+                    <button id="btn-tool-noise" onclick="toggleNoiseMeter()" class="group flex items-center px-6 py-4 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer">
+                        <i data-lucide="ear" class="mr-3 w-8 h-8 group-hover:scale-110 transition-transform"></i> 소음측정
+                    </button>
+                    <button id="btn-tool-attention" onclick="playAttentionBell()" class="group flex items-center px-6 py-4 bg-gradient-to-br from-rose-500 to-red-500 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer">
+                        <i data-lucide="bell-electric" class="mr-3 w-8 h-8 group-hover:scale-110 transition-transform"></i> 주목!
+                    </button>
+                    <button id="btn-tool-youtube" onclick="openYouTube()" class="group flex items-center px-6 py-4 bg-gradient-to-br from-red-600 to-red-700 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer">
+                        <i data-lucide="youtube" class="mr-3 w-8 h-8 group-hover:scale-110 transition-transform"></i> 유튜브
+                    </button>
+                    <button id="btn-tool-tinkerbell" onclick="openExternalSite('tinkerbell')" class="group flex items-center px-6 py-4 bg-gradient-to-br from-sky-500 to-blue-600 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer" title="팅커벨 (tkbell.co.kr)">
+                        <i data-lucide="sparkles" class="mr-3 w-8 h-8 group-hover:scale-110 transition-transform"></i> 팅커벨
+                    </button>
+                    <button id="btn-tool-iscream" onclick="openExternalSite('iscream')" class="group flex items-center px-6 py-4 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer" title="아이스크림 (i-scream.co.kr)">
+                        <i data-lucide="ice-cream-cone" class="mr-3 w-8 h-8 group-hover:scale-110 transition-transform"></i> 아이스크림
+                    </button>
+                    <button id="btn-tool-lunch" onclick="openLunchModal()" class="group flex items-center px-6 py-4 bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer">
+                        <i data-lucide="utensils" class="mr-3 w-8 h-8 group-hover:scale-110 transition-transform"></i> 급식
+                    </button>
+                    <button id="btn-tool-popupnote" onclick="togglePopupNote()" class="group flex items-center px-6 py-4 bg-gradient-to-br from-amber-400 to-orange-400 text-white rounded-2xl hover:shadow-lg transition-all transform hover:-translate-y-1 font-bold text-xl whitespace-nowrap cursor-pointer">
+                        <i data-lucide="sticky-note" class="mr-3 w-8 h-8 group-hover:scale-110 transition-transform"></i> 팝업노트
+                    </button>
+                </div>
+                <button onclick="openToolSettings()" class="p-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition shrink-0" title="도구 상세 설정">
+                    <i data-lucide="settings-2" class="w-8 h-8"></i>
+                </button>
+            </div>
+
+            <!-- NOTEPAD (칠판) -->
+            <div class="flex-1 panel-bg rounded-3xl shadow-sm border border-slate-200 flex flex-col overflow-hidden min-h-0 relative">
+                <div class="bg-slate-50/50 px-5 py-2.5 border-b border-slate-200 flex items-center justify-start shrink-0 overflow-x-auto hide-scrollbar gap-4" id="notepad-toolbar">
+                    <div class="flex items-center shrink-0">
+                        <h2 id="board-toggle-btn" onclick="toggleBoardMode()" class="font-bold text-slate-700 flex items-center text-3xl whitespace-nowrap cursor-pointer hover:text-brand-600 transition-all group w-[7.5rem] shrink-0 select-none" title="판서/알림 모드 전환">
+    <div class="w-10 h-10 flex items-center justify-center mr-1">
+        <i id="board-mode-icon" data-lucide="edit-3" class="w-8 h-8 text-brand-500 group-hover:scale-110"></i>
+    </div>
+    <span id="board-mode-text" class="inline-block">판서</span>
+</h2>
+                    </div>
+                    
+                    <div class="flex items-center space-x-1.5 bg-white px-2 py-1.5 rounded-xl border shadow-sm shrink-0 whitespace-nowrap">
+                        <select id="board-font-select" onchange="changeBoardFontFamily(this.value)" class="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-bold outline-none cursor-pointer text-sm w-24">
+                            <option value='"Jua", "Nanum Gothic", sans-serif'>주아체</option>
+                            <option value='"Maplestory", "Nanum Gothic", sans-serif'>메이플스토리체</option>
+                            <option value='"Nanum Gothic", sans-serif'>나눔고딕</option>
+                            <option value='"Nanum Myeongjo", serif'>나눔명조</option>
+                            <option value='"Poor Story", "Nanum Gothic", cursive'>손글씨</option>
+                            <option value='"Gamja Flower", "Nanum Gothic", cursive'>감자꽃</option>
+                            <option value='sans-serif'>고딕</option>
+                            <option value='serif'>명조</option>
+                            <option value='monospace'>타자기</option>
+                        </select>
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        
+                        <div class="flex items-center bg-slate-50 rounded-lg border border-slate-100">
+                            <button onclick="boardEditor.undo()" class="p-1.5 hover:bg-slate-200 rounded-l-lg text-slate-600 transition" title="되돌리기"><i data-lucide="undo" class="w-4 h-4"></i></button>
+                            <button onclick="boardEditor.redo()" class="p-1.5 hover:bg-slate-200 text-slate-600 transition" title="원래대로 (다시실행)"><i data-lucide="redo" class="w-4 h-4"></i></button>
+                            <div class="w-px h-4 bg-slate-200"></div>
+                            <button onclick="promptClearNotepad()" class="p-1.5 hover:bg-rose-100 rounded-r-lg text-rose-500 transition" title="지우개 (전체 지우기)"><i data-lucide="eraser" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+
+                        <div class="flex items-center bg-slate-100 rounded-lg px-1">
+                            <button onclick="adjustBoardFontSize(-2)" class="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600" title="글자 작게"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                            <input type="number" id="board-font-size-input" value="32" onchange="setBoardFontSize(this.value)" class="w-12 text-center bg-transparent font-bold text-slate-800 outline-none text-base" title="글자 크기">
+                            <button onclick="adjustBoardFontSize(2)" class="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600" title="글자 크게"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        <div class="flex items-center bg-slate-50 rounded-lg border border-slate-100">
+                            <button onclick="boardEditor.toggleBold()" class="px-3 py-1.5 hover:bg-slate-200 rounded-l-lg text-slate-700 font-bold text-lg transition" title="굵게">B</button>
+                            <div class="w-px h-4 bg-slate-200"></div>
+                            <button onclick="boardEditor.toggleItalic()" class="px-3 py-1.5 hover:bg-slate-200 rounded-r-lg text-slate-700 italic text-lg font-serif transition" title="기울임꼴">I</button>
+                        </div>
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        <div class="flex items-center bg-slate-50 rounded-lg border border-slate-100">
+                            <button onclick="boardEditor.align('left')" class="p-1.5 hover:bg-slate-200 rounded-l-lg text-slate-600" title="왼쪽 정렬"><i data-lucide="align-left" class="w-4 h-4"></i></button>
+                            <button onclick="boardEditor.align('center')" class="p-1.5 hover:bg-slate-200 text-slate-600" title="가운데 정렬"><i data-lucide="align-center" class="w-4 h-4"></i></button>
+                            <button onclick="boardEditor.align('right')" class="p-1.5 hover:bg-slate-200 rounded-r-lg text-slate-600" title="오른쪽 정렬"><i data-lucide="align-right" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        <button onclick="openTableModal()" class="p-2 bg-slate-50 hover:bg-slate-200 rounded-lg border border-slate-100 text-slate-600 transition" title="표 만들기"><i data-lucide="table" class="w-4 h-4"></i></button>
+                        
+                        <button onclick="document.getElementById('board-image-input').click()" class="p-2 bg-slate-50 hover:bg-slate-200 rounded-lg border border-slate-100 text-slate-600 transition ml-1" title="사진 삽입 (끌어다 놓기도 가능)"><i data-lucide="image" class="w-4 h-4"></i></button>
+                        <input type="file" id="board-image-input" accept="image/*" class="hidden" onchange="handleBoardImageUpload(event)">
+                        
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        
+                        <div class="flex space-x-1.5 px-1 items-center" id="board-colors"></div>
+
+                        <div class="w-px h-6 bg-slate-200 mx-1.5"></div>
+                        
+                        <!-- ⭐️ 판서 배경색 선택기 추가 -->
+                        <div class="flex items-center space-x-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100" title="칠판 배경색상 변경">
+                            <i data-lucide="monitor" class="w-4 h-4 text-slate-400"></i>
+                            <select id="board-bg-select" onchange="changeBoardBg(this.value)" class="bg-transparent text-slate-700 font-bold outline-none cursor-pointer text-sm w-[6.5rem]">
+                                <option value="inherit">배경 동기화</option>
+                                <option value="#064e3b">칠판(녹색)</option>
+                                <option value="#1e293b">칠판(흑색)</option>
+                                <option value="#ffffff">화이트보드</option>
+                                <option value="#fef9c3">옐로우보드</option>
+                            </select>
+                        </div>
+
+                        <div class="w-px h-6 bg-slate-200 mx-1.5"></div>
+                        
+                        <div class="flex items-center gap-2 pr-1">
+                            <button onclick="saveBoard()" class="px-4 py-2 w-24 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center font-bold transition shadow-sm border border-indigo-100" title="현재 내용 기록보관함에 저장">
+                                <i data-lucide="save" class="w-4 h-4 mr-1.5"></i> <span class="text-sm">보관</span>
+                            </button>
+                            <button onclick="openSavedBoards()" class="px-4 py-2 w-24 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 rounded-lg flex items-center justify-center font-bold transition shadow-sm border border-cyan-100" title="저장 목록 보기">
+                                <i data-lucide="folder-open" class="w-4 h-4 mr-1.5"></i> <span class="text-sm">목록</span>
+                            </button>
+                            <button onclick="promptClearNotepad()" class="px-4 py-2 w-24 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center font-bold transition shadow-sm border border-rose-100" title="전체 지우기">
+                                <i data-lucide="trash-2" class="w-4 h-4 mr-1.5"></i> <span class="text-sm">지우기</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="notepad-editor" style="font-size: 32px;" class="flex-1 p-8 text-slate-800 overflow-y-auto w-full h-full outline-none relative"></div>
+                
+                <!-- 이미지 편집 플로팅 툴바 -->
+                <div id="image-action-toolbar" class="hidden absolute bg-white p-2 rounded-2xl shadow-xl border border-slate-200 z-[110] flex items-center gap-1 animate-pop-in">
+                    <span class="text-xs font-bold text-slate-400 mx-1">사진</span>
+                    <div class="w-px h-4 bg-slate-200"></div>
+                    <button onclick="boardEditor.alignImage('left')" class="p-2.5 hover:bg-indigo-50 rounded-xl text-slate-700 hover:text-indigo-600 transition" title="왼쪽 정렬"><i data-lucide="align-left" class="w-5 h-5 pointer-events-none"></i></button>
+                    <button onclick="boardEditor.alignImage('center')" class="p-2.5 hover:bg-indigo-50 rounded-xl text-slate-700 hover:text-indigo-600 transition" title="가운데 정렬"><i data-lucide="align-center" class="w-5 h-5 pointer-events-none"></i></button>
+                    <button onclick="boardEditor.alignImage('right')" class="p-2.5 hover:bg-indigo-50 rounded-xl text-slate-700 hover:text-indigo-600 transition" title="오른쪽 정렬"><i data-lucide="align-right" class="w-5 h-5 pointer-events-none"></i></button>
+                    <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                    <button onclick="boardEditor.scaleImage(0.9)" class="p-2.5 bg-slate-50 hover:bg-indigo-50 rounded-xl text-slate-700 hover:text-indigo-600 transition" title="10% 작게"><i data-lucide="zoom-out" class="w-5 h-5 pointer-events-none"></i></button>
+                    <button onclick="boardEditor.scaleImage(1.1)" class="p-2.5 bg-slate-50 hover:bg-indigo-50 rounded-xl text-slate-700 hover:text-indigo-600 transition" title="10% 크게"><i data-lucide="zoom-in" class="w-5 h-5 pointer-events-none"></i></button>
+                    <div class="w-px h-4 bg-slate-200 mx-1"></div>
+                    <button onclick="boardEditor.deleteImage()" class="p-2.5 bg-rose-50 hover:bg-rose-100 rounded-xl text-rose-600 transition" title="사진 삭제"><i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i></button>
+                    <button onclick="boardEditor.deselect()" class="p-2.5 text-slate-400 hover:bg-slate-100 rounded-xl transition" title="닫기"><i data-lucide="x" class="w-5 h-5 pointer-events-none"></i></button>
+                </div><div id="btn-tool-activity" class="absolute bottom-8 left-8 flex flex-col-reverse items-start gap-3 z-[150]">
+    <div id="activity-indicator" onclick="toggleActivityMenu()" class="cursor-pointer bg-white/95 backdrop-blur-sm border border-slate-200 px-5 py-3.5 rounded-3xl shadow-2xl flex items-center gap-4 animate-pop-in hover:scale-105 transition-transform w-64">
+        <div id="activity-icon-bg" class="p-3 rounded-2xl bg-slate-800 text-white">
+            <i id="activity-icon" data-lucide="volume-x" class="w-10 h-10"></i>
+        </div>
+        <div class="flex flex-col">
+            <span class="text-sm font-bold text-slate-400">학습 약속</span>
+            <span id="activity-desc" class="text-2xl font-bold text-slate-800 tracking-tight">0단계: 침묵</span>
+        </div>
+    </div>
+
+    <div id="activity-menu" class="hidden flex-col gap-2 bg-white/95 p-3 rounded-3xl border border-slate-200 shadow-2xl animate-pop-in mb-2 w-60">
+        <button onclick="setActivityMode(3)" class="flex items-center gap-3 p-3 hover:bg-orange-50 rounded-2xl transition w-full text-left">
+            <div class="p-2 bg-orange-500 text-white rounded-xl shrink-0"><i data-lucide="megaphone" class="w-6 h-6"></i></div>
+            <span class="text-xl font-bold text-slate-800 whitespace-nowrap">3단계: 발표</span>
+        </button>
+        <button onclick="setActivityMode(2)" class="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-2xl transition w-full text-left">
+            <div class="p-2 bg-emerald-500 text-white rounded-xl shrink-0"><i data-lucide="users" class="w-6 h-6"></i></div>
+            <span class="text-xl font-bold text-slate-800 whitespace-nowrap">2단계: 대화</span>
+        </button>
+        <button onclick="setActivityMode(1)" class="flex items-center gap-3 p-3 hover:bg-blue-50 rounded-2xl transition w-full text-left">
+            <div class="p-2 bg-blue-500 text-white rounded-xl shrink-0"><i data-lucide="message-square" class="w-6 h-6"></i></div>
+            <span class="text-xl font-bold text-slate-800 whitespace-nowrap">1단계: 속삭임</span>
+        </button>
+        <button onclick="setActivityMode(0)" class="flex items-center gap-3 p-3 hover:bg-slate-100 rounded-2xl transition w-full text-left">
+            <div class="p-2 bg-slate-800 text-white rounded-xl shrink-0"><i data-lucide="volume-x" class="w-6 h-6"></i></div>
+            <span class="text-xl font-bold text-slate-800 whitespace-nowrap">0단계: 침묵</span>
+        </button>
+    </div>
+</div>
+            
+            <!-- POPUP NOTE -->
+            <div id="floating-popup-note" class="hidden absolute bottom-6 right-6 w-[22.5rem] h-[28.125rem] bg-amber-50 rounded-3xl shadow-2xl flex-col border border-amber-300 z-[100] overflow-hidden animate-pop-in">
+                <div class="bg-amber-200 px-5 py-4 flex justify-between items-center shrink-0">
+                    <h3 class="font-bold text-amber-800 flex items-center text-lg">
+                        <i data-lucide="sticky-note" class="mr-2 w-5 h-5"></i> 팝업 노트
+                    </h3>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="savePopupNoteToList()" class="p-2 hover:bg-amber-300 rounded-xl text-amber-800 transition" title="기록 목록에 영구 보관">
+                            <i data-lucide="save" class="w-5 h-5 pointer-events-none"></i>
+                        </button>
+                        <button onclick="togglePopupNote()" class="p-2 hover:bg-amber-300 rounded-xl text-amber-800 transition" title="닫기 (자동 임시저장)">
+                            <i data-lucide="x" class="w-5 h-5 pointer-events-none"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-amber-100 px-4 py-2 flex justify-between items-center border-b border-amber-200 shrink-0">
+                    <div class="flex items-center space-x-1 bg-white rounded-lg px-1 py-0.5 shadow-sm border border-amber-200">
+                        <button onclick="changePopupNoteFontSize(-2)" class="p-1 hover:bg-slate-100 rounded text-slate-600" title="작게"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                        <span id="popup-note-size-display" class="text-sm font-bold w-6 text-center text-slate-700">24</span>
+                        <button onclick="changePopupNoteFontSize(2)" class="p-1 hover:bg-slate-100 rounded text-slate-600" title="크게"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+                    <button id="btn-popup-bold" onclick="togglePopupNoteBold()" class="px-3 py-1 bg-white hover:bg-amber-200 rounded-lg text-slate-700 font-bold transition shadow-sm border border-amber-200" title="굵게">B</button>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="changePopupNoteColor('#1e293b')" class="w-6 h-6 rounded-full border-2 border-transparent hover:scale-110 transition-transform shadow-sm bg-slate-800" id="p-col-1" title="검정색"></button>
+                        <button onclick="changePopupNoteColor('#ef4444')" class="w-6 h-6 rounded-full border-2 border-transparent hover:scale-110 transition-transform shadow-sm bg-red-500" id="p-col-2" title="빨간색"></button>
+                        <button onclick="changePopupNoteColor('#3b82f6')" class="w-6 h-6 rounded-full border-2 border-transparent hover:scale-110 transition-transform shadow-sm bg-blue-500" id="p-col-3" title="파란색"></button>
+                    </div>
+                </div>
+                <textarea id="popup-note-textarea" class="flex-1 w-full bg-transparent resize-none outline-none p-6 text-slate-800 font-medium leading-relaxed" placeholder="간단한 메모를 작성하세요... (닫아도 유지됩니다)" style="font-family: 'Poor Story', cursive;"></textarea>
+            </div>
+
+            <!-- FLOATING TIMER -->
+       <div id="floating-timer" class="hidden absolute bottom-6 right-[48.5rem] w-[21.25rem] bg-white rounded-3xl shadow-2xl flex-col border border-blue-200 z-[100] overflow-hidden animate-pop-in">
+                <div class="bg-blue-50 px-5 py-4 flex justify-between items-center shrink-0 border-b border-blue-100">
+                    <h3 class="font-bold text-blue-800 flex items-center text-lg">
+                        <i data-lucide="timer" class="mr-2 w-5 h-5"></i> 타이머
+                    </h3>
+                    <button onclick="toggleTimerPopup()" class="p-2 hover:bg-blue-100 rounded-xl text-blue-800 transition" title="닫기">
+                        <i data-lucide="x" class="w-5 h-5 pointer-events-none"></i>
+                    </button>
+                </div>
+                <div class="p-6 flex flex-col items-center">
+                    <div id="timer-display" class="text-7xl leading-none font-bold text-slate-800 tabular-nums mb-6 tracking-tighter">00:00</div>
+                    <div class="grid grid-cols-4 gap-2 mb-6 w-full">
+                        <button onclick="addTimerTime(1200)" class="py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-700 transition shadow-sm text-sm">+20분</button>
+                        <button onclick="addTimerTime(600)" class="py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-700 transition shadow-sm text-sm">+10분</button>
+                        <button onclick="addTimerTime(300)" class="py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-700 transition shadow-sm text-sm">+5분</button>
+                        <button onclick="addTimerTime(60)" class="py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-700 transition shadow-sm text-sm">+1분</button>
+                    </div>
+                    <div class="flex gap-3 w-full">
+                        <button onclick="resetTimer()" class="flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl transition border border-red-100 text-lg">초기화</button>
+                        <button id="btn-timer-toggle" onclick="toggleTimer()" class="flex-[2] py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-md text-xl">시작</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FLOATING NOISE METER (소음 측정기) -->
+<div id="floating-noise-meter" class="hidden absolute bottom-6 right-[25rem] w-[22.5rem] bg-white rounded-3xl shadow-2xl flex-col border border-emerald-200 z-[100] overflow-hidden animate-pop-in"> 
+<div class="bg-emerald-50 px-5 py-3 flex justify-between items-center shrink-0 border-b border-emerald-100">
+        <h3 class="font-bold text-emerald-800 flex items-center text-lg">
+            <i data-lucide="ear" class="mr-2 w-5 h-5"></i> 소음 측정기
+        </h3>
+        <button onclick="toggleNoiseMeter()" class="p-2 hover:bg-emerald-100 rounded-xl text-emerald-800 transition" title="닫기">
+            <i data-lucide="x" class="w-5 h-5 pointer-events-none"></i>
+        </button>
+    </div>
+    <div class="p-4 flex flex-col items-center">
+        
+        <div class="flex gap-4 p-3 bg-slate-800 rounded-full border-[0.3125rem] border-slate-700 w-full justify-center shadow-inner mb-4">
+            <div id="nl-green" class="w-10 h-10 rounded-full bg-emerald-500 opacity-20 transition-all duration-200"></div>
+            <div id="nl-yellow" class="w-10 h-10 rounded-full bg-yellow-400 opacity-20 transition-all duration-200"></div>
+            <div id="nl-red" class="w-10 h-10 rounded-full bg-red-500 opacity-20 transition-all duration-200"></div>
+        </div>
+        
+        <div class="w-full bg-slate-100 h-5 rounded-full overflow-hidden mb-3 shadow-inner border border-slate-200 relative">
+            <div id="noise-level-bar" class="bg-emerald-500 h-full w-0 transition-all duration-100"></div>
+            <div class="absolute top-0 bottom-0 left-[80%] w-0.5 bg-red-400 z-10" title="경고 기준선"></div>
+        </div>
+        
+        <div class="flex items-center w-full justify-between bg-slate-50 p-2 rounded-xl border border-slate-100 mb-4">
+            <span class="text-xs font-bold text-slate-600 shrink-0">민감도</span>
+            <input type="range" id="noise-sens-input" min="1" max="10" value="5" class="w-3/5 mx-2 accent-emerald-500" onchange="updateNoiseSens(this.value)">
+            <span id="noise-sens-val" class="text-xs font-bold text-emerald-700 w-6 text-right">5</span>
+        </div>
+
+        <div class="w-full border-t border-slate-200 mb-3"></div>
+        
+        <div class="flex justify-between items-center w-full mb-3">
+            <div class="text-base font-bold text-slate-600">누적 경고: <span id="noise-warning-count" class="text-red-500 text-3xl mx-1 font-black">0</span>회</div>
+            <button onclick="resetNoiseWarning()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-bold transition text-xs shadow-sm border border-slate-200">초기화</button>
+        </div>
+        
+        <div class="w-full flex flex-col gap-1.5">
+            <div class="flex items-center gap-2">
+                <input type="number" id="noise-rule1-count" value="3" class="w-10 text-center border border-red-200 bg-red-50 text-red-700 font-bold rounded-lg py-1 outline-none text-xs" onchange="saveNoiseRules()">
+                <span class="text-[0.625rem] font-bold text-slate-400">회</span>
+                <input type="text" id="noise-rule1-text" placeholder="3회 경고 시 규칙" class="flex-1 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none focus:border-emerald-500 font-bold text-slate-700" onchange="saveNoiseRules()">
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="number" id="noise-rule2-count" value="5" class="w-10 text-center border border-red-200 bg-red-50 text-red-700 font-bold rounded-lg py-1 outline-none text-xs" onchange="saveNoiseRules()">
+                <span class="text-[0.625rem] font-bold text-slate-400">회</span>
+                <input type="text" id="noise-rule2-text" placeholder="5회 경고 시 규칙" class="flex-1 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none focus:border-emerald-500 font-bold text-slate-700" onchange="saveNoiseRules()">
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- MODALS SECTION -->
+
+    <!-- VERSION INFO MODAL -->
+    <div id="modal-version" class="modal fixed inset-0 z-[80] items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[28rem] max-h-[90vh] flex flex-col overflow-y-auto p-8 text-center animate-pop-in">
+            <div class="mx-auto bg-brand-100 p-4 rounded-full mb-4">
+                <i data-lucide="monitor-play" class="w-12 h-12 text-brand-600"></i>
+            </div>
+            <h2 class="text-4xl font-bold text-slate-800 mb-2">하루이음</h2>
+            <p id="version-text" class="text-slate-500 font-bold mb-4">v-</p>
+            <div id="version-history" class="text-left bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4 max-h-[16rem] overflow-y-auto"></div>
+            <div id="update-status" class="hidden text-sm font-bold mb-3"></div>
+            <button onclick="window.updater.checkNow()" class="w-full py-2.5 mb-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition flex items-center justify-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4 pointer-events-none"></i> 업데이트 확인</button>
+            <div class="mb-6 pt-4 border-t border-slate-100 flex flex-col items-center justify-center text-slate-600 text-base space-y-2">
+                <div class="flex items-center text-lg"><i data-lucide="user" class="w-5 h-5 mr-2"></i><span class="font-bold">만든사람: <span class="text-brand-600">도구리</span></span></div>
+                <div class="flex items-center"><i data-lucide="school" class="w-4 h-4 mr-2"></i><span class="font-medium">홍북초등학교 3학년</span></div>
+                <div class="flex items-center"><i data-lucide="mail" class="w-4 h-4 mr-2"></i><span class="font-medium">raccoon@ai.cne.go.kr</span></div>
+            </div>
+            <button onclick="closeModal('modal-version')" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-md transition text-lg">확인</button>
+        </div>
+    </div>
+
+    <!-- ALARM POPUP -->
+    <div id="modal-alarm" class="modal fixed inset-0 z-[120] items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-10 max-w-xl w-full text-center shadow-2xl transform animate-bounce-short border-t-8 border-brand-500">
+            <div class="mx-auto w-24 h-24 bg-brand-100 rounded-full flex items-center justify-center mb-6">
+                <i data-lucide="bell" class="w-12 h-12 text-brand-500 animate-pulse"></i>
+            </div>
+            <h1 id="alarm-title" class="text-5xl font-extrabold text-slate-800 mb-6">알람 제목</h1>
+            <p id="alarm-message" class="text-3xl text-slate-600 font-bold mb-6">알람 내용</p>
+            <div id="alarm-countdown" class="text-xl text-red-500 font-bold mb-10 bg-red-50 py-2 px-6 rounded-2xl inline-block border border-red-200 shadow-inner"></div>
+            <button onclick="closeAlarm()" class="w-full py-6 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-2xl font-bold transition shadow-lg flex items-center justify-center">
+                <i data-lucide="volume-x" class="mr-3 w-8 h-8"></i> 알람 끄기 및 닫기
+            </button>
+        </div>
+    </div>
+
+    <!-- EMPTY NOTEPAD ALERT MODAL -->
+    <div id="modal-alert-empty" class="modal fixed inset-0 z-[100] items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-pop-in">
+            <i data-lucide="alert-circle" class="w-16 h-16 text-amber-500 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">알림</h2>
+            <p class="text-slate-600 font-medium mb-8">보관할 내용이 없습니다.</p>
+            <button onclick="closeModal('modal-alert-empty')" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition shadow-sm">확인</button>
+        </div>
+    </div>
+
+    <!-- CLEAR CONFIRM MODAL -->
+    <div id="modal-confirm-clear" class="modal fixed inset-0 z-[100] items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-pop-in border-4 border-rose-500">
+            <i data-lucide="trash-2" class="w-16 h-16 text-rose-500 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">판서 지우기</h2>
+            <p class="text-slate-600 font-medium mb-8">정말 판서 내용을 모두 지우시겠습니까?</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal('modal-confirm-clear')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">취소</button>
+                <button onclick="executeClearNotepad()" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-md">지우기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESET CONFIRM MODAL -->
+    <div id="modal-reset-confirm" class="modal fixed inset-0 z-[90] items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-pop-in border-4 border-red-500">
+            <i data-lucide="alert-triangle" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">초기화 확인</h2>
+            <p class="text-slate-600 font-medium mb-8 leading-relaxed">선택한 데이터를 정말 초기화하시겠습니까?<br>이 작업은 되돌릴 수 없습니다.</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal('modal-reset-confirm')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">취소</button>
+                <button onclick="executeReset()" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition shadow-md">확인 (초기화)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SETTINGS MODAL -->
+    <div id="modal-settings" class="modal fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[59.375rem] max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="text-2xl font-bold flex items-center text-slate-800">
+                    <i data-lucide="settings" class="mr-2 text-brand-600"></i> 환경 설정
+                </h2>
+                <button onclick="closeModal('modal-settings')" class="p-2 hover:bg-slate-200 rounded-full transition">
+                    <i data-lucide="x" class="w-6 h-6 pointer-events-none"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 flex gap-8">
+                <!-- Left Column -->
+                <div class="flex-1 space-y-6">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-slate-800">기초 시간표 입력</h3>
+                            <div class="flex items-center bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                                <span class="text-sm font-bold text-slate-600 mr-2">점심시간 순서</span>
+                                <select id="setting-lunch-pos" onchange="handleLunchPosChange(this.value)" class="p-1 rounded-lg border border-slate-300 font-bold text-brand-700 outline-none focus:ring-2 focus:ring-brand-500 text-sm bg-white cursor-pointer">
+                                    <option value="3">3교시 후</option>
+                                    <option value="4">4교시 후</option>
+                                    <option value="5">5교시 후</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="settings-schedule-grid" class="grid grid-cols-6 gap-2"></div>
+                    </div>
+                    
+                    <div class="border-t border-slate-200 pt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-rose-600 flex items-center text-lg">
+                                <i data-lucide="mic" class="mr-2"></i> 퇴근 시간 알람 (음성+팝업)
+                            </h3>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggle-leave-work" class="sr-only peer" checked>
+                                <div class="w-12 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                            </label>
+                        </div>
+                        <div class="flex flex-col space-y-3 bg-rose-50 p-4 rounded-xl border border-rose-100">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold text-rose-800 shrink-0">알람 시간</span>
+                              <input type="time" id="input-leave-work-time" value="16:40" class="w-32 border border-rose-200 text-rose-800 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-rose-500 font-bold bg-white text-center text-sm ml-2">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold text-rose-800 shrink-0">화면 팝업 표시</span>
+                                <label class="relative inline-flex items-center cursor-pointer ml-2">
+                                    <input type="checkbox" id="toggle-leave-work-popup" class="sr-only peer" checked>
+                                    <div class="w-10 h-5 bg-rose-200 rounded-full peer-checked:bg-rose-500 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold text-rose-800 shrink-0">팝업 유지 시간</span>
+                                <select id="select-leave-work-duration" class="p-1.5 rounded-lg border border-rose-200 font-bold text-rose-800 outline-none focus:ring-2 focus:ring-rose-500 bg-white cursor-pointer w-auto flex-1 max-w-[8rem] text-center text-sm ml-2">
+                                    <option value="10">10초</option>
+                                    <option value="30">30초</option>
+                                    <option value="60">60초</option>
+                                    <option value="manual">직접 닫기</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데이터 초기화 섹션 -->
+                    <div class="border-t border-slate-200 pt-6">
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center mb-4">
+                            <i data-lucide="rotate-ccw" class="mr-2 text-red-500"></i> 데이터 초기화
+                        </h3>
+                        <div class="flex items-center gap-4 mb-4 text-sm font-bold text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 flex-wrap">
+                            <label class="flex items-center cursor-pointer hover:text-brand-600"><input type="checkbox" id="reset-board" class="mr-1.5 w-4 h-4"> 판서</label>
+                            <label class="flex items-center cursor-pointer hover:text-brand-600"><input type="checkbox" id="reset-note" class="mr-1.5 w-4 h-4"> 팝업노트</label>
+                            <label class="flex items-center cursor-pointer hover:text-brand-600"><input type="checkbox" id="reset-table" class="mr-1.5 w-4 h-4"> 시간표</label>
+                            <label class="flex items-center cursor-pointer hover:text-brand-600"><input type="checkbox" id="reset-alarm" class="mr-1.5 w-4 h-4"> 알람설정</label>
+                            <div class="w-px h-4 bg-slate-300 mx-2"></div>
+                            <label class="flex items-center cursor-pointer text-red-500 hover:text-red-700"><input type="checkbox" id="reset-all" onchange="toggleAllReset(this)" class="mr-1.5 w-4 h-4 accent-red-500"> 전체선택</label>
+                        </div>
+                        <button onclick="document.getElementById('modal-reset-confirm').classList.add('active')" class="px-5 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-bold transition flex items-center shadow-sm">
+                            선택된 항목 초기화
+                        </button>
+                    </div>
+                </div>
+
+                <div class="w-px bg-slate-200"></div>
+
+                <!-- Right Column -->
+                <div class="w-[23.75rem] flex flex-col space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">교시별 시간 설정</h3>
+                        <div id="settings-time-list" class="space-y-2.5"></div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-5">
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">팝업 설정</h3>
+                        <label class="flex items-center justify-between cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <span class="font-bold text-slate-700 text-sm">빈 공간 클릭하여 팝업 닫기</span>
+                            <input type="checkbox" id="toggle-close-outside" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:bg-brand-500 transition-all after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-5 after:w-5 peer-checked:after:translate-x-full relative"></div>
+                        </label>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-5">
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">업데이트</h3>
+                        <p class="text-xs text-slate-500 mb-2">새 버전 정보 파일(latest.json)의 주소입니다. 비워 두면 기본 주소(깃허브 doguri25/smartboard-v2 릴리스)를 씁니다.</p>
+                        <input type="text" id="setting-update-url" placeholder="기본: https://github.com/doguri25/smartboard-v2/releases/latest/download/latest.json" class="w-full p-2 rounded-xl border border-slate-300 font-bold outline-none focus:ring-2 focus:ring-brand-500 text-sm mb-2">
+                        <label class="flex items-center justify-between cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <span class="font-bold text-slate-700 text-sm">시작할 때 자동으로 확인</span>
+                            <input type="checkbox" id="toggle-auto-update" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:bg-brand-500 transition-all after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-5 after:w-5 peer-checked:after:translate-x-full relative"></div>
+                        </label>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-5">
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">디자인 테마</h3>
+                        <p class="text-xs text-slate-500 mb-3">화면 전체의 분위기(바탕·판·글자색·모서리)를 바꿉니다. 아래 색상 설정은 그 위에 덧입혀집니다.</p>
+                        <div id="skin-cards" class="grid grid-cols-5 gap-2"></div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-5">
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">강조 색상</h3>
+                        <div class="flex gap-2.5">
+                            <button onclick="changeTheme('default')" class="w-10 h-10 rounded-full bg-[#4f46e5] border-2 border-white shadow-md hover:scale-110 transition-transform"></button>
+                            <button onclick="changeTheme('green')" class="w-10 h-10 rounded-full bg-[#10b981] border-2 border-white shadow-md hover:scale-110 transition-transform"></button>
+                            <button onclick="changeTheme('orange')" class="w-10 h-10 rounded-full bg-[#f97316] border-2 border-white shadow-md hover:scale-110 transition-transform"></button>
+                            <button onclick="changeTheme('pink')" class="w-10 h-10 rounded-full bg-[#f43f5e] border-2 border-white shadow-md hover:scale-110 transition-transform"></button>
+                            <button onclick="changeTheme('purple')" class="w-10 h-10 rounded-full bg-[#9333ea] border-2 border-white shadow-md hover:scale-110 transition-transform"></button>
+                            <button onclick="changeTheme('teal')" class="w-10 h-10 rounded-full bg-[#0d9488] border-2 border-white shadow-md hover:scale-110 transition-transform"></button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-5">
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">전체 바탕색 설정</h3>
+                        <div class="flex gap-2.5">
+                            <button onclick="changeBgColor('skin')" class="h-10 px-3 rounded-xl bg-slate-100 border border-slate-300 shadow-sm hover:scale-105 transition-transform text-xs font-bold text-slate-600" title="디자인 테마의 기본 바탕색">테마 기본</button>
+                            <button onclick="changeBgColor('#f1f5f9')" class="w-10 h-10 rounded-xl bg-[#f1f5f9] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changeBgColor('#fffbeb')" class="w-10 h-10 rounded-xl bg-[#fffbeb] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changeBgColor('#f0fdf4')" class="w-10 h-10 rounded-xl bg-[#f0fdf4] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changeBgColor('#fdf2f8')" class="w-10 h-10 rounded-xl bg-[#fdf2f8] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changeBgColor('#f0f9ff')" class="w-10 h-10 rounded-xl bg-[#f0f9ff] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-5">
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">판넬 색상 설정</h3>
+                        <div class="flex gap-2.5">
+                            <button onclick="changePanelColor('skin')" class="h-10 px-3 rounded-xl bg-slate-100 border border-slate-300 shadow-sm hover:scale-105 transition-transform text-xs font-bold text-slate-600" title="디자인 테마의 기본 판넬색">테마 기본</button>
+                            <button onclick="changePanelColor('#ffffff')" class="w-10 h-10 rounded-xl bg-[#ffffff] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changePanelColor('#fef9c3')" class="w-10 h-10 rounded-xl bg-[#fef9c3] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changePanelColor('#dcfce7')" class="w-10 h-10 rounded-xl bg-[#dcfce7] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changePanelColor('#e0f2fe')" class="w-10 h-10 rounded-xl bg-[#e0f2fe] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changePanelColor('#fce7f3')" class="w-10 h-10 rounded-xl bg-[#fce7f3] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                            <button onclick="changePanelColor('#f3e8ff')" class="w-10 h-10 rounded-xl bg-[#f3e8ff] border border-slate-300 shadow-sm hover:scale-110 transition-transform"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="saveMainSettings()" class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-colors flex items-center shadow-md text-lg">
+                    <i data-lucide="check" class="mr-2 w-6 h-6"></i> 저장 및 닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALARM DETAIL SETTINGS MODAL -->
+    <div id="modal-alarm-settings" class="modal fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[30rem] max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-brand-200 flex justify-between items-center bg-brand-50 shrink-0">
+                <h2 class="text-xl font-bold flex items-center text-brand-800"><i data-lucide="bell-ring" class="mr-2"></i> 교시 알람 상세 설정</h2>
+                <button onclick="closeModal('modal-alarm-settings')" class="p-2 hover:bg-brand-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 pointer-events-none"></i></button>
+            </div>
+            <div class="p-6 space-y-5 overflow-y-auto flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-700 text-lg">교시 알람 팝업 켜기</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle-alarm-popup" class="sr-only peer" checked>
+                        <div class="w-14 h-7 bg-slate-200 rounded-full peer peer-checked:bg-brand-600 transition-all after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full relative"></div>
+                    </label>
+                </div>
+                
+                <div class="flex flex-col space-y-2">
+                    <span class="font-bold text-slate-700 text-lg">교시 시작 전 알람 시간</span>
+                    <select id="setting-start-alarm-offset" class="p-3 rounded-xl border border-slate-300 outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 text-lg font-bold cursor-pointer">
+                        <option value="0">정각에 울림 (음악 생략)</option>
+                        <option value="1">1분 전</option>
+                        <option value="3">3분 전</option>
+                        <option value="5">5분 전</option>
+                        <option value="10">10분 전</option>
+                    </select>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <span class="font-bold text-slate-700 text-lg">교시 종료 전 알람 시간</span>
+                    <select id="setting-end-alarm-offset" class="p-3 rounded-xl border border-slate-300 outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 text-lg font-bold cursor-pointer">
+                        <option value="0">정각에 울림 (음악 생략)</option>
+                        <option value="1">1분 전</option>
+                        <option value="3">3분 전</option>
+                        <option value="5">5분 전</option>
+                        <option value="10">10분 전</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                    <span class="font-bold text-slate-700 text-lg">알람 팝업 유지 시간 (초)</span>
+                    <input type="number" id="input-alarm-duration" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-500 transition text-lg font-bold">
+                </div>
+
+                <div class="w-full h-px bg-slate-200 my-2"></div>
+                
+                <div class="flex flex-col space-y-2">
+                    <span class="font-bold text-slate-700 text-lg">알람 음악 선택 (약 1분 연주)</span>
+                    <div class="flex gap-2">
+                        <select id="setting-alarm-melody" onchange="toggleMp3Input()" class="flex-1 p-3 rounded-xl border border-slate-300 outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 text-lg font-bold cursor-pointer">
+                            <option value="1">활기찬 행진곡 (풍성한 화음)</option>
+                            <option value="2">다채로운 캐논 (피아노 선율)</option>
+                            <option value="3">할아버지의 낡은 시계 (오르골)</option>
+                            <option value="4">내 MP3 파일 재생</option>
+                        </select>
+                        <button onclick="previewMelody()" class="bg-indigo-100 text-indigo-700 px-4 rounded-xl font-bold hover:bg-indigo-200 transition whitespace-nowrap shadow-sm">미리듣기</button>
+                    </div>
+                    <div id="mp3-input-container" class="hidden flex-col mt-2 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                        <span class="text-sm font-bold text-indigo-800 mb-1">🎵 알람 소리 파일</span>
+                        <span class="text-xs text-indigo-600 mb-2">'MP3 찾기'로 소리 파일(mp3, wav, m4a, ogg)을 고르면 앱 안에 복사되어 저장됩니다.</span>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="input-custom-mp3" readonly placeholder="선택된 파일 없음 (기본음 사용)" class="flex-1 bg-white border border-indigo-200 rounded-lg px-3 py-2 outline-none font-bold text-slate-800">
+                            <button type="button" onclick="pickCustomMp3()" class="shrink-0 px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-bold text-sm transition">MP3 찾기</button>
+                            <button type="button" onclick="clearCustomMp3()" class="shrink-0 px-3 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-lg font-bold text-sm transition">기본음</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full h-px bg-slate-200 my-2"></div>
+
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-slate-700 text-lg flex items-center justify-between">
+                        <span><i data-lucide="mic" class="mr-2 text-brand-500 inline"></i> 안내 멘트 (TTS) 내용 설정</span>
+                    </h3>
+
+                    <div class="flex flex-col mt-2">
+                        <span class="text-sm font-bold text-slate-500 mb-1">시작 멘트 (음악 종료 후)</span>
+                        <input type="text" id="input-start-message" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-500 transition font-bold text-slate-800">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-500 mb-1">종료 멘트 (음악 종료 후)</span>
+                        <input type="text" id="input-end-message" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-500 transition font-bold text-slate-800">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-500 mb-1">종례 멘트 (과목이 있는 마지막 교시 종료 시)</span>
+                        <input type="text" id="input-closing-message" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-brand-500 transition font-bold text-slate-800" placeholder="예: 하루 종일 수고 많으셨습니다.">
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+                <button onclick="saveAlarmSettings()" class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-sm text-lg transition">확인 및 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIME SETTINGS MODAL -->
+    <div id="modal-time-settings" class="modal fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[28.125rem] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="text-xl font-bold flex items-center text-slate-800"><i data-lucide="clock" class="mr-2 text-brand-500"></i> 시간 및 지정 알람</h2>
+                <button onclick="closeModal('modal-time-settings')" class="p-2 hover:bg-slate-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 pointer-events-none"></i></button>
+            </div>
+            <div class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-inner">
+                    <span class="font-bold text-slate-700 text-lg">24시간제 표시</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle-24hour-format" class="sr-only peer">
+                        <div class="w-14 h-7 bg-slate-200 rounded-full peer peer-checked:bg-brand-600 transition-all after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full relative"></div>
+                    </label>
+                </div>
+                <div class="w-full h-px bg-slate-200 my-2"></div>
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-700 text-lg flex items-center"><i data-lucide="bell-plus" class="mr-2 text-rose-500 w-5 h-5"></i> 지정 시간 알람</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle-custom-alarm" class="sr-only peer">
+                        <div class="w-14 h-7 bg-slate-200 rounded-full peer peer-checked:bg-rose-500 transition-all after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full relative"></div>
+                    </label>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <div class="flex items-center gap-3">
+                        <select id="input-custom-alarm-freq" class="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3 py-3 font-bold text-lg outline-none shadow-sm cursor-pointer">
+                            <option value="once">한 번만</option>
+                            <option value="daily">매일</option>
+                        </select>
+                        <input type="time" id="input-custom-alarm-time" class="flex-1 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-4 py-3 outline-none transition text-xl font-bold">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-500 mb-1">팝업 및 음성 메시지</span>
+                        <input type="text" id="input-custom-alarm-msg" placeholder="예: 약 먹을 시간입니다!" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-500 transition font-bold text-slate-800 text-lg">
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="saveTimeSettings()" class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-sm text-lg transition">확인 및 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CALENDAR MODAL -->
+    <div id="modal-calendar" class="modal fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[25rem] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="text-xl font-bold flex items-center text-slate-800"><i data-lucide="calendar-days" class="mr-2 text-brand-500"></i> 달력</h2>
+                <button onclick="closeModal('modal-calendar')" class="p-2 hover:bg-slate-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 pointer-events-none"></i></button>
+            </div>
+            <div class="p-6 flex flex-col">
+                <div class="flex justify-between items-center mb-6 shrink-0">
+                    <button onclick="changeCalendarMonth(-1)" class="p-2 hover:bg-slate-100 rounded-xl transition"><i data-lucide="chevron-left"></i></button>
+                    <h3 id="calendar-month-year" class="text-3xl font-bold text-slate-800"></h3>
+                    <button onclick="changeCalendarMonth(1)" class="p-2 hover:bg-slate-100 rounded-xl transition"><i data-lucide="chevron-right"></i></button>
+                </div>
+                <div class="w-full shrink-0 h-[18.75rem]">
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center w-full"></div>
+                </div>
+                <div class="mt-4 text-center shrink-0 border-t border-slate-100 pt-4">
+                    <button onclick="resetCalendarToToday()" class="px-6 py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold rounded-xl transition text-base">오늘로 이동</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LUNCH MODAL -->
+    <div id="modal-lunch" class="modal fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[31.25rem] max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-emerald-100 flex justify-between items-center bg-emerald-50 shrink-0">
+                <h2 class="text-xl font-bold flex items-center text-emerald-800"><i data-lucide="utensils" class="mr-2"></i> 오늘의 급식 정보</h2>
+                <div class="flex items-center">
+                    <button onclick="window.lunch.toggleAllergyPanel()" class="p-2 hover:bg-emerald-200 rounded-full transition mr-1" title="알레르기 표시 설정"><i data-lucide="triangle-alert" class="w-5 h-5 text-emerald-800 pointer-events-none"></i></button>
+                    <button onclick="toggleSchoolSelector()" class="p-2 hover:bg-emerald-200 rounded-full transition mr-2" title="학교 변경"><i data-lucide="search" class="w-5 h-5 text-emerald-800 pointer-events-none"></i></button>
+                    <button onclick="closeModal('modal-lunch')" class="p-2 hover:bg-emerald-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 text-emerald-800 pointer-events-none"></i></button>
+                </div>
+            </div>
+            <div id="school-selector-panel" class="hidden bg-slate-100 border-b border-slate-200 p-4 shrink-0 shadow-inner">
+                <span class="text-sm font-bold text-slate-600 block mb-2">학교 검색 (예: 홍성초등학교)</span>
+                <div class="flex gap-2">
+                    <input type="text" id="school-search-input" placeholder="학교 이름 입력" class="w-full p-2 rounded-xl border border-slate-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500" onkeydown="if(event.key==='Enter') searchSchool()">
+                    <button onclick="searchSchool()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm whitespace-nowrap">검색</button>
+                </div>
+                <div id="school-search-results" class="mt-3 flex flex-col gap-2 max-h-40 overflow-y-auto"></div>
+            </div>
+            <div id="allergy-panel" class="hidden bg-rose-50 border-b border-rose-100 p-4 shrink-0">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-bold text-rose-800">알레르기 표시 — 우리 반에 해당하는 것만 체크하세요</span>
+                    <button onclick="window.lunch.clearAllergens()" class="text-xs font-bold text-rose-500 hover:bg-rose-100 px-2 py-1 rounded-lg">모두 해제</button>
+                </div>
+                <div id="allergy-chips" class="flex flex-wrap gap-1.5"></div>
+                <p class="text-xs text-rose-500 mt-2">체크한 재료가 들어간 메뉴는 붉은색으로 표시되고, 체크하지 않은 알레르기 번호는 보이지 않습니다.</p>
+            </div>
+            <div class="p-8 flex flex-col flex-1 overflow-y-auto" id="modal-lunch-content">
+                <div class="flex items-center justify-center py-10 flex-col">
+                    <i data-lucide="utensils-crossed" class="w-16 h-16 text-emerald-200 mb-4"></i>
+                    <span class="text-slate-500 font-bold" id="lunch-placeholder-text">우측 상단 돋보기 버튼을 눌러 학교를 검색해주세요.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WEATHER MODAL -->
+    <div id="modal-weather" class="modal fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[34.375rem] flex flex-col overflow-hidden max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-blue-100 flex justify-between items-center bg-blue-50 shrink-0">
+                <h2 class="text-xl font-bold flex items-center text-blue-800"><i data-lucide="cloud-sun" class="mr-2"></i> <span id="weather-location-title"></span> 날씨 정보</h2>
+                <div class="flex items-center">
+                    <button onclick="toggleRegionSelector()" class="p-2 hover:bg-blue-200 rounded-full transition mr-2" title="지역 변경"><i data-lucide="settings" class="w-5 h-5 text-blue-800"></i></button>
+                    <button onclick="closeModal('modal-weather')" class="p-2 hover:bg-blue-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 text-blue-800 pointer-events-none"></i></button>
+                </div>
+            </div>
+            <div id="region-selector-panel" class="hidden bg-slate-100 border-b border-slate-200 p-4 shrink-0 shadow-inner">
+                <span class="text-sm font-bold text-slate-600 block mb-2">날씨 지역</span>
+                <div class="flex gap-2 mb-3">
+                    <select id="weather-sido" onchange="window.weather.fillSigungu(this.value)" class="flex-1 p-2 rounded-xl border border-slate-300 font-bold bg-white outline-none focus:ring-2 focus:ring-blue-500"></select>
+                    <select id="weather-sigungu" class="flex-[2] p-2 rounded-xl border border-slate-300 font-bold bg-white outline-none focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+                <span class="text-sm font-bold text-slate-600 block mb-1">공공데이터포털 인증키</span>
+                <span class="text-xs text-slate-500 block mb-2">data.go.kr 가입 → '기상청_단기예보 조회서비스'와 '한국환경공단_에어코리아_대기오염정보' 활용신청(자동 승인) → 마이페이지의 일반 인증키를 붙여넣으세요.</span>
+                <div class="flex gap-2">
+                    <input type="text" id="weather-api-key" placeholder="인증키 붙여넣기" class="flex-1 p-2 rounded-xl border border-slate-300 font-bold outline-none focus:ring-2 focus:ring-blue-500 text-sm" onkeydown="if(event.key==='Enter') window.weather.applyRegionPanel()">
+                    <button onclick="window.weather.applyRegionPanel()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm whitespace-nowrap">저장</button>
+                </div>
+            </div>
+            <div class="p-8 flex flex-col flex-1 overflow-y-auto" id="modal-weather-content">
+                <div class="flex items-center justify-center py-10">
+                    <i data-lucide="loader-2" class="w-10 h-10 text-blue-500 animate-spin"></i>
+                    <span class="ml-3 text-slate-500 font-bold">로딩 중...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOOL SETTINGS MODAL -->
+    <div id="modal-tool-settings" class="modal fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[40.625rem] max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="text-xl font-bold flex items-center text-slate-800"><i data-lucide="settings-2" class="mr-2 text-slate-500"></i> 도구 설정</h2>
+                <button onclick="closeModal('modal-tool-settings')" class="p-2 hover:bg-slate-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 pointer-events-none"></i></button>
+            </div>
+            <div class="p-6 flex-1 overflow-y-auto">
+                <div class="border-b border-slate-200 pb-6 mb-6 flex flex-col gap-5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-slate-700 text-lg">화면 배치 설정 (시간표 위치)</h3>
+                        <div class="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                            <button id="pos-btn-left" onclick="setTempTimetablePos('left')" class="px-4 py-2 rounded-lg font-bold text-base transition bg-white shadow-sm text-brand-600">왼쪽 (기본)</button>
+                            <button id="pos-btn-right" onclick="setTempTimetablePos('right')" class="px-4 py-2 rounded-lg font-bold text-base transition text-slate-500 hover:text-slate-700">오른쪽</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-slate-700 text-lg">도구 판넬 위치 (판서 위/아래)</h3>
+                        <div class="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                            <button id="tool-pos-btn-top" onclick="setTempToolPos('top')" class="px-4 py-2 rounded-lg font-bold text-base transition bg-white shadow-sm text-brand-600">위 (기본)</button>
+                            <button id="tool-pos-btn-bottom" onclick="setTempToolPos('bottom')" class="px-4 py-2 rounded-lg font-bold text-base transition text-slate-500 hover:text-slate-700">아래</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h3 class="font-bold text-slate-700 text-lg mb-3">상단 도구 버튼 표시</h3>
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border">
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">🎲 뽑기</span><input type="checkbox" id="toggle-tool-picker" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-purple-500 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">⏱ 타이머</span><input type="checkbox" id="toggle-tool-timer" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-blue-500 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">🚦 소음측정</span><input type="checkbox" id="toggle-tool-noise" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">🔔 주목!</span><input type="checkbox" id="toggle-tool-attention" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-rose-500 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">▶️ 유튜브</span><input type="checkbox" id="toggle-tool-youtube" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-red-600 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">✨ 팅커벨</span><input type="checkbox" id="toggle-tool-tinkerbell" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">🍦 아이스크림</span><input type="checkbox" id="toggle-tool-iscream" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-rose-500 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">🍱 급식</span><input type="checkbox" id="toggle-tool-lunch" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+                        <label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm"><span class="font-bold text-base">📝 팝업노트</span><input type="checkbox" id="toggle-tool-popupnote" class="sr-only peer"><div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-amber-500 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div></label>
+<label class="flex justify-between items-center cursor-pointer bg-white p-2 rounded-lg border shadow-sm">
+                            <span class="font-bold text-base">📋 학습 약속</span>
+                            <input type="checkbox" id="toggle-tool-activity" class="sr-only peer">
+                            <div class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-brand-500 after:content-[''] after:absolute after:top-[0.125rem] after:left-[0.125rem] after:bg-white after:rounded-full after:h-4 after:w-4 peer-checked:after:translate-x-[1.25rem] transition-all relative"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between mb-6">
+                    <span class="font-bold text-slate-700 text-lg">뽑기 인원수 설정</span>
+                    <input type="number" id="input-max-picker" class="w-24 bg-slate-50 border rounded-xl px-4 py-2 font-bold text-center outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="border-t border-slate-200 pt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-700 text-lg">학생 명렬표 입력</h3>
+                        <button onclick="clearStudentNames()" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg text-base border border-red-200 transition">모두 초기화</button>
+                    </div>
+                    <p class="text-base text-slate-500 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">* 엑셀에서 복사 후 1번 칸에 붙여넣기(Ctrl+V) 하시면 전체가 자동 입력됩니다.</p>
+                    <div class="grid grid-cols-3 gap-3" id="student-list-container"></div>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+                <button onclick="saveToolSettings()" class="px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition shadow-sm text-xl">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PICKER RESULT MODAL -->
+    <div id="modal-picker-result" class="modal fixed inset-0 z-[70] items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-[3rem] p-12 max-w-md w-full text-center shadow-2xl flex flex-col items-center">
+            <h2 class="text-2xl font-bold text-slate-500 mb-6">선택된 사람은</h2>
+            <div id="picker-result-text" class="mb-10 w-full flex flex-col items-center justify-center"></div>
+            <div class="flex gap-4 w-full">
+                <button onclick="closeModal('modal-picker-result')" class="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xl font-bold transition">닫기</button>
+                <button onclick="pickRandomNumber()" class="flex-1 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl text-xl font-bold transition shadow-md">계속 뽑기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SAVED BOARDS LIST MODAL -->
+    <div id="modal-saved-list" class="modal fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[31.25rem] max-h-[80vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-indigo-100 flex justify-between items-center bg-indigo-50 shrink-0">
+                <h2 class="text-xl font-bold text-indigo-800 flex items-center"><i data-lucide="folder-open" class="mr-2"></i>저장된 기록 목록</h2>
+                <button onclick="closeModal('modal-saved-list')" class="p-2 hover:bg-indigo-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 text-indigo-800 pointer-events-none"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-slate-100/50" id="saved-boards-container"></div>
+        </div>
+    </div>
+
+    <!-- SAVED BOARD VIEWER MODAL -->
+    <div id="modal-board-viewer" class="modal fixed inset-0 z-[60] items-center justify-center bg-black/60 backdrop-blur-sm p-8">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="text-xl font-bold flex items-center text-slate-800">
+                    <i data-lucide="file-text" class="mr-2 text-indigo-500"></i> 기록 보기
+                    <span id="viewer-date" class="ml-4 text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full border"></span>
+                </h2>
+                <button onclick="closeModal('modal-board-viewer')" class="p-2 hover:bg-slate-200 rounded-full transition"><i data-lucide="x" class="w-6 h-6 pointer-events-none"></i></button>
+            </div>
+            <div id="viewer-content" class="flex-1 p-8 overflow-y-auto text-slate-800 bg-white" style="line-height: 1.6; font-size: 32px; font-family: 'Jua', sans-serif;"></div>
+        </div>
+    </div>
+
+    <!-- TABLE INPUT MODAL -->
+    <div id="modal-table-input" class="modal fixed inset-0 z-[80] items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[20rem] flex flex-col overflow-hidden animate-pop-in">
+            <div class="px-5 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center"><i data-lucide="table" class="mr-2 text-brand-500 w-5 h-5"></i> 표 만들기</h2>
+                <button onclick="closeModal('modal-table-input')" class="p-1.5 hover:bg-slate-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 pointer-events-none"></i></button>
+            </div>
+            <div class="p-6 flex flex-col space-y-5">
+                <div class="flex items-center justify-between">
+                    <label class="font-bold text-slate-700 text-lg">줄 (행)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="input-table-rows" value="3" min="1" max="20" class="w-20 text-center border-2 border-slate-300 rounded-xl px-2 py-2 font-bold text-xl focus:border-brand-500 outline-none">
+                        <span class="text-slate-500 font-bold">줄</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <label class="font-bold text-slate-700 text-lg">칸 (열)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="input-table-cols" value="3" min="1" max="20" class="w-20 text-center border-2 border-slate-300 rounded-xl px-2 py-2 font-bold text-xl focus:border-brand-500 outline-none">
+                        <span class="text-slate-500 font-bold">칸</span>
+                    </div>
+                </div>
+                <button onclick="confirmInsertTable()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white text-lg font-bold rounded-xl transition shadow-md mt-2">표 삽입하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SAVE RECORD MODAL -->
+    <div id="modal-save-board" class="modal fixed inset-0 z-[80] items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-[23.75rem] flex flex-col overflow-hidden animate-pop-in">
+            <div class="px-5 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center"><i data-lucide="save" class="mr-2 text-brand-500 w-5 h-5"></i> 기록 보관</h2>
+                <button onclick="closeModal('modal-save-board')" class="p-1.5 hover:bg-slate-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5 pointer-events-none"></i></button>
+            </div>
+            <div class="p-6 flex flex-col space-y-5">
+                <div class="flex flex-col space-y-2">
+                    <label class="font-bold text-slate-700 text-lg">저장할 제목을 입력하세요</label>
+                    <input type="text" id="input-save-board-title" class="w-full border-2 border-slate-300 rounded-xl px-4 py-3 font-bold text-lg focus:border-brand-500 outline-none" onkeydown="if(event.key==='Enter') confirmSaveBoard()">
+                </div>
+                <button onclick="confirmSaveBoard()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white text-lg font-bold rounded-xl transition shadow-md mt-2">보관하기</button>
+            </div>
+        </div>
+    </div>
+<div id="floating-youtube" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[56rem] h-[38rem] bg-white rounded-3xl shadow-2xl flex-col overflow-hidden border border-red-200 z-[100]">
+        <div class="flex flex-col flex-1 min-h-0 w-full h-full">
+            <div class="px-6 py-4 border-b border-red-100 flex justify-between items-center bg-red-50 shrink-0 cursor-move">
+                <h2 class="text-xl font-bold flex items-center text-red-700"><i data-lucide="youtube" class="mr-2"></i> 유튜브 플레이어</h2>
+                <div class="flex items-center gap-1">
+                    <button id="youtube-back-btn" onclick="window.youtubeUI.stop()" class="hidden px-3 py-1.5 mr-2 bg-white hover:bg-red-100 border border-red-200 text-red-700 rounded-xl font-bold text-sm transition">← 목록으로</button>
+                    <button onclick="window.smartboardHost.openSite('youtube')" class="px-3 py-1.5 mr-1 bg-white hover:bg-red-100 border border-red-200 text-red-700 rounded-xl font-bold text-sm transition flex items-center gap-1" title="유튜브 사이트를 앱 창으로 열어 로그인합니다. 로그인은 기억됩니다."><i data-lucide="user-round" class="w-4 h-4 pointer-events-none"></i>유튜브 로그인</button>
+                    <button onclick="window.youtubeUI.toggleKeyPanel()" class="p-2 hover:bg-red-200 rounded-full transition" title="API 키 설정"><i data-lucide="key-round" class="w-5 h-5 text-red-700 pointer-events-none"></i></button>
+                    <button onclick="closeYouTube()" class="p-2 hover:bg-red-200 rounded-full transition"><i data-lucide="x" class="w-6 h-6 text-red-700 pointer-events-none"></i></button>
+                </div>
+            </div>
+            <div id="youtube-key-panel" class="hidden bg-amber-50 border-b border-amber-200 p-4 shrink-0">
+                <span class="text-sm font-bold text-amber-800 block mb-1">YouTube Data API 키 (검색에만 필요, 주소 재생은 키 없이 가능)</span>
+                <span class="text-xs text-amber-700 block mb-2">console.cloud.google.com → 프로젝트 만들기 → 'YouTube Data API v3' 사용 설정 → 사용자 인증 정보 → API 키 만들기. 하루 약 100회 검색 가능.</span>
+                <div class="flex gap-2">
+                    <input type="text" id="youtube-api-key" placeholder="API 키 붙여넣기" class="flex-1 p-2 rounded-xl border border-amber-300 font-bold outline-none focus:ring-2 focus:ring-amber-500 text-sm" onkeydown="if(event.key==='Enter') window.youtubeUI.saveKey()">
+                    <button onclick="window.youtubeUI.saveKey()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm whitespace-nowrap">저장</button>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-100 flex gap-2 shrink-0">
+                <input type="text" id="youtube-url-input" placeholder="유튜브 주소 또는 검색어를 입력하세요" class="flex-1 p-3 rounded-xl border border-slate-300 font-bold outline-none focus:ring-2 focus:ring-red-500" onkeydown="if(event.key==='Enter') searchYouTube()">
+                <button onclick="searchYouTube()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm">검색/재생</button>
+            </div>
+            <div id="youtube-status" class="hidden px-4 py-2 text-sm font-bold text-slate-500 bg-slate-50 border-b border-slate-200 shrink-0"></div>
+            <div class="flex-1 bg-slate-900 relative overflow-hidden">
+                <div id="youtube-results" class="hidden absolute inset-0 overflow-y-auto p-4 bg-slate-100"><div id="youtube-results-grid" class="grid grid-cols-3 gap-4 items-start"></div></div>
+                <div id="youtube-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500">
+                    <i data-lucide="play-circle" class="w-20 h-20 mb-4 opacity-20"></i>
+                    <p class="font-bold">검색어를 입력하거나 유튜브 주소를 붙여넣어 주세요.</p>
+                </div>
+                <iframe id="youtube-iframe" class="hidden w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 앱 스크립트는 src/main.ts, src/legacy-app.js 로 이동 -->
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

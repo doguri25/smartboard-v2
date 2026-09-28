@@ -1,0 +1,105 @@
+/* ============================================================
+   마감 다듬기 (2.2.0) — 패널·버튼·시간표·팝업·입력칸의 질감
+   색은 디자인 테마 변수(skins.css)를 그대로 쓰므로 모든 테마에 적용됩니다.
+   ============================================================ */
+
+/* ---- 머리글: 유리 느낌 + 아래 선 ---- */
+header {
+  background-color: var(--sk-header-bg) !important;
+  background-image: var(--sk-header-image, none);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 1px 0 var(--sk-header-line), 0 8px 24px -20px rgba(0, 0, 0, 0.4) !important;
+}
+/* 머리글 안의 요소들은 테마별 머리글 색을 따름 (skins.css 의 --sk-header-*) */
+header h1 { color: var(--sk-header-logo) !important; }
+header #current-time-text { color: var(--sk-header-text) !important; }
+header #current-time-text:hover { color: var(--brand-500) !important; }
+header .bg-slate-50, header .bg-slate-100, header .hover\:bg-slate-100:hover { background-color: var(--sk-header-chip-bg) !important; }
+header .border-slate-200 { border-color: var(--sk-header-chip-line) !important; }
+header .bg-slate-200, header .bg-slate-300 { background-color: var(--sk-header-chip-line) !important; }
+header .text-slate-700, header .text-slate-600, header .text-slate-500 { color: var(--sk-header-chip-text) !important; }
+header .hover\:bg-white:hover { background-color: var(--sk-header-chip-hover) !important; }
+header button.bg-slate-800 { background-color: var(--sk-header-gear-bg) !important; color: var(--sk-header-gear-text) !important; box-shadow: var(--sk-shadow-md); }
+header button.bg-slate-800:hover { filter: brightness(1.15); }
+header #header-weather-text, header #header-dust-text { color: inherit; }
+#current-time-text, #timer-display, .slot-time { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+
+/* ---- 큰 판(시간표·도구·칠판): 얇은 테두리 + 부드러운 그림자 ---- */
+.panel-bg {
+  box-shadow: var(--sk-shadow-md), inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+  border-color: rgb(var(--sk-line)) !important;
+}
+[data-skin="dark"] .panel-bg { box-shadow: var(--sk-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+
+/* ---- 도구 버튼: 안쪽 하이라이트 + 부드러운 그림자, 누르면 가라앉음 ---- */
+#toolbar-tools > button {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(0, 0, 0, 0.12), 0 6px 14px -8px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+#toolbar-tools > button:hover { filter: saturate(var(--sk-saturate)) brightness(1.07); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 12px 22px -10px rgba(0, 0, 0, 0.5); }
+#toolbar-tools > button:active { filter: saturate(var(--sk-saturate)) brightness(0.96); box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25); translate: 0 0; }
+
+/* ---- 시간표 칸 ---- */
+.timetable-slot {
+  border-radius: var(--sk-r2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.timetable-slot:hover { transform: translateX(2px); }
+.timetable-slot.bg-brand-500 {
+  background-image: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  box-shadow: 0 14px 28px -14px var(--brand-700), 0 0 0 3px color-mix(in srgb, var(--brand-400) 45%, transparent);
+  border-color: var(--brand-400) !important;
+}
+.timetable-slot .slot-subject { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.06); }
+[data-skin="dark"] .timetable-slot .slot-subject { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+
+/* ---- 떠 있는 창: 유리 테두리, 깊은 그림자, 머리글 손잡이 표시 ---- */
+/* 학습 약속(#btn-tool-activity)은 투명한 묶음 상자라 테두리·그림자를 주면 네모 선이 보임 → 안의 알약(#activity-indicator)에만 */
+.sb-floating:not(#btn-tool-activity), #activity-indicator, #activity-menu {
+  border: 1px solid color-mix(in srgb, rgb(var(--sk-line)) 80%, transparent) !important;
+  box-shadow: 0 30px 60px -22px rgba(0, 0, 0, 0.45), 0 4px 14px -6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+}
+[data-skin="dark"] .sb-floating:not(#btn-tool-activity), [data-skin="dark"] #activity-indicator, [data-skin="dark"] #activity-menu { box-shadow: 0 30px 60px -22px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06) !important; }
+#btn-tool-activity { border: 0 !important; box-shadow: none !important; background: transparent !important; }
+.sb-float-handle { position: relative; }
+.sb-float-handle::before {
+  content: ""; position: absolute; top: 5px; left: 50%; translate: -50% 0;
+  width: 2.25rem; height: 0.28rem; border-radius: 999px; background: currentColor; opacity: 0.22;
+}
+#activity-indicator.sb-float-handle::before { display: none; }
+.sb-resize-grip { opacity: 0.45; }
+.sb-floating:hover .sb-resize-grip { opacity: 0.9; }
+
+/* ---- 팝업(모달) 창 ---- */
+.modal > div {
+  border: 1px solid color-mix(in srgb, rgb(var(--sk-line)) 70%, transparent);
+  box-shadow: 0 48px 90px -30px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+}
+[data-skin="dark"] .modal > div { box-shadow: 0 48px 90px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06) inset; }
+.modal.active { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+
+/* ---- 일반 버튼: 살짝 떠 있는 느낌 ---- */
+button.rounded-xl:not(.p-1\.5):not(.p-2), button.rounded-2xl { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.18); }
+button.bg-brand-600, button.bg-red-500, button.bg-red-600, button.bg-blue-600, button.bg-emerald-600, button.bg-amber-500, button.bg-indigo-500 {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 6px 14px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* ---- 입력칸: 부드러운 초점 링 ---- */
+:where(input:not([type="checkbox"]):not([type="range"]):not([type="color"]), select, textarea):focus {
+  outline: none;
+  border-color: var(--brand-400);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-500) 22%, transparent);
+}
+
+/* ---- 토글 스위치: 손잡이 그림자 ---- */
+.peer:checked ~ div::after, .peer ~ div::after { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+
+/* ---- 판서 도구 모음 ---- */
+#notepad-toolbar { backdrop-filter: blur(6px); }
+#notepad-toolbar select, #notepad-toolbar input { border-radius: 0.6rem; }
+
+/* ---- 스크롤바를 테마색에 맞춤 ---- */
+::-webkit-scrollbar-thumb { background: rgb(var(--sk-line-2)); }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--sk-line-3)); }

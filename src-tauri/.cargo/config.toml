@@ -1,0 +1,5 @@
+# 리눅스/맥에서 윈도우용(x86_64-pc-windows-gnu)으로 크로스 컴파일할 때의 링커 설정
+# (윈도우 PC 에서 직접 빌드할 때는 영향 없음)
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
+rustflags = ["-C", "link-self-contained=no"]

@@ -1,0 +1,34 @@
+/* 떠 있는 팝업 공통 스타일 (src/floating.ts 와 짝) */
+.sb-floating {
+  animation: sb-appear 0.25s ease-out;
+}
+@keyframes sb-appear {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 드래그 손잡이(머리글) */
+.sb-float-handle {
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 오른쪽 아래 크기 조절 손잡이 */
+.sb-resize-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 5;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background: repeating-linear-gradient(135deg, transparent 0 0.3rem, rgba(100, 116, 139, 0.45) 0.3rem 0.45rem);
+  opacity: 0.7;
+}
+.sb-resize-grip:hover { opacity: 1; }
+
+/* (2.5.1) 학습 약속 창의 손잡이도 다른 창과 같이 오른쪽 아래 — 조절하는 동안만 위·왼쪽을 고정해 끄는 방향으로 커짐 */

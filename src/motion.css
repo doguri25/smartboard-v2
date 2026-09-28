@@ -1,0 +1,71 @@
+/* ============================================================
+   움직임 효과 (src/motion.ts 와 짝) — 2.2.0
+   ============================================================ */
+:root { --ease-mac: cubic-bezier(0.32, 0.72, 0, 1); }
+
+/* ---- 팝업(모달): 배경은 서서히, 창은 살짝 커지며 등장 ---- */
+@keyframes sb-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sb-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes sb-mac-in   { from { opacity: 0; scale: 0.9; translate: 0 14px; } to { opacity: 1; scale: 1; translate: 0 0; } }
+@keyframes sb-mac-out  { from { opacity: 1; scale: 1; translate: 0 0; } to { opacity: 0; scale: 0.94; translate: 0 8px; } }
+
+.modal.active { animation: sb-fade-in 0.22s ease-out; }
+.modal.active > div { animation: sb-mac-in 0.32s var(--ease-mac); }
+.modal.closing { display: flex; pointer-events: none; animation: sb-fade-out 0.19s ease-in forwards; }
+.modal.closing > div { animation: sb-mac-out 0.19s ease-in forwards; }
+/* 기존 pop-in 은 새 효과로 대체 */
+.modal .animate-pop-in { animation: none; }
+.modal.active > div.animate-pop-in { animation: sb-mac-in 0.32s var(--ease-mac); }
+.modal.closing > div.animate-pop-in { animation: sb-mac-out 0.19s ease-in forwards; }
+
+/* ---- 떠 있는 창(팝업 노트·타이머·소음·학습 약속) ---- */
+@keyframes sb-float-in  { from { opacity: 0; scale: 0.88; translate: 0 10px; } to { opacity: 1; scale: 1; translate: 0 0; } }
+@keyframes sb-float-out { from { opacity: 1; scale: 1; } to { opacity: 0; scale: 0.9; translate: 0 6px; } }
+.sb-floating { animation: sb-float-in 0.32s var(--ease-mac); }
+.sb-floating.closing { display: flex !important; pointer-events: none; animation: sb-float-out 0.19s ease-in forwards; }
+
+/* ---- 클릭 효과 ---- */
+button, .timetable-slot, .skin-card, #activity-indicator, .sb-tap {
+  transition: scale 0.12s ease, filter 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+button:active, .timetable-slot:active, .skin-card:active, #activity-indicator:active, .sb-tap:active { scale: 0.96; }
+button:disabled:active { scale: 1; }
+/* 판서 편집기 안·크기 조절 손잡이는 제외 */
+.ProseMirror button:active, .sb-resize-grip:active { scale: 1; }
+
+.sb-ripple-box { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.sb-ripple {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: currentColor; opacity: 0.22; scale: 0;
+  animation: sb-ripple 0.55s ease-out forwards;
+}
+@keyframes sb-ripple { to { scale: 1; opacity: 0; } }
+
+/* ---- 커서 물결 (화면 어디를 눌러도) ---- */
+#sb-click-fx { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; overflow: hidden; }
+.sb-cursor-ripple {
+  position: absolute; width: 80px; height: 80px; margin: -40px 0 0 -40px;
+  border-radius: 50%; pointer-events: none;
+  border: 3px solid var(--brand-500, #6366f1);
+  background: color-mix(in srgb, var(--brand-500, #6366f1) 28%, transparent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-500, #6366f1) 45%, transparent), 0 2px 10px color-mix(in srgb, var(--brand-500, #6366f1) 25%, transparent);
+  opacity: 1; scale: 0.2;
+  animation: sb-cursor-ripple 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.sb-cursor-ripple.is-touch { width: 104px; height: 104px; margin: -52px 0 0 -52px; }
+@keyframes sb-cursor-ripple {
+  55% { opacity: 0.7; }
+  to { scale: 1; opacity: 0; border-width: 1px; background: transparent; box-shadow: 0 0 0 12px transparent, 0 0 0 transparent; }
+}
+
+/* 애니메이션을 줄이는 접근성 설정을 켠 경우 */
+@media (prefers-reduced-motion: reduce) {
+  .modal.active, .modal.active > div, .modal.closing, .modal.closing > div, .sb-floating, .sb-floating.closing { animation-duration: 0.01s; }
+  .sb-ripple, .sb-cursor-ripple { display: none; }
+}
+
+/* ---- 판서 ↔ 알림 전환 ---- */
+@keyframes sb-mode-out { to { opacity: 0; translate: 0 -10px; scale: 0.995; } }
+@keyframes sb-mode-in { from { opacity: 0; translate: 0 12px; scale: 0.995; } to { opacity: 1; translate: 0 0; scale: 1; } }
+#notepad-editor.sb-mode-out { animation: sb-mode-out 0.14s ease-in forwards; }
+#notepad-editor.sb-mode-in { animation: sb-mode-in 0.22s var(--ease-mac); }

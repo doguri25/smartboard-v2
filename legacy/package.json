@@ -1,0 +1,32 @@
+{
+  "name": "smart-board",
+  "version": "1.6.11",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "npm run react-build && electron-builder",
+    "react-build": "npm run build" 
+  },
+  "build": {
+    "appId": "com.doguri.smartboard",
+    "productName": "스마트 전자칠판",
+    "copyright": "Copyright © 2024 도구리",
+    "directories": {
+      "output": "dist_electron" 
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "스마트 전자칠판"
+    },
+    "files": [
+      "**/*",
+      "assets/**/*",
+      "dist/**/*"
+    ]
+  }
+}

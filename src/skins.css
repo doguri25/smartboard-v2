@@ -1,0 +1,450 @@
+/* ============================================================
+   디자인 테마(스킨) — 2.1.0
+   원리: 화면의 회색 계열 유틸리티 클래스(bg-white, text-slate-800 ...)를
+   전부 CSS 변수로 연결해 두고, <html data-skin="..."> 값에 따라 변수만 바꿉니다.
+   기본(light)은 원래 색 그대로라 아무것도 달라지지 않습니다.
+   강조색(--brand-*)은 기존 '강조 색상' 설정이 계속 담당합니다.
+   ============================================================ */
+
+:root {
+  --sk-page: 241 245 249;          /* 바탕 */
+  --sk-page-image: none;
+  --sk-surface: 255 255 255;       /* bg-white: 패널·창 */
+  --sk-surface-2: 248 250 252;     /* bg-slate-50 */
+  --sk-surface-3: 241 245 249;     /* bg-slate-100 */
+  --sk-surface-4: 226 232 240;     /* bg-slate-200 */
+  --sk-surface-5: 203 213 225;     /* bg-slate-300 */
+  --sk-line: 226 232 240;          /* border-slate-200 (100도 여기로) */
+  --sk-line-2: 203 213 225;        /* border-slate-300 */
+  --sk-line-3: 148 163 184;        /* border-slate-400 */
+  --sk-text-1: 30 41 59;        /* text-slate-800 */
+  --sk-text-2: 51 65 85;        /* text-slate-700 */
+  --sk-text-3: 71 85 105;        /* text-slate-600 */
+  --sk-text-4: 100 116 139;        /* text-slate-500 */
+  --sk-text-5: 148 163 184;        /* text-slate-400 */
+  --sk-text-6: 203 213 225;        /* text-slate-300 */
+  --sk-ink: 30 41 59;           /* bg-slate-800/900: 어두운 상자 (글씨는 흰색) */
+  --sk-ink-2: 15 23 42;
+  --sk-on-ink: 255 255 255;
+  --sk-overlay: 0 0 0;
+  --sk-r1: 0.75rem;            /* rounded-xl */
+  --sk-r2: 1rem;               /* rounded-2xl */
+  --sk-r3: 1.5rem;             /* rounded-3xl */
+  --sk-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --sk-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --sk-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --sk-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --sk-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --sk-font: "Jua", "Nanum Gothic", sans-serif;
+  --sk-font-heading: var(--sk-font);
+  --sk-saturate: 1;            /* 도구 버튼 채도 */
+  --panel-bg: rgb(var(--sk-surface));
+  /* 머리글 */
+  --sk-header-bg: color-mix(in srgb, rgb(var(--sk-surface)) 88%, transparent);
+  --sk-header-image: none;
+  --sk-header-line: rgb(var(--sk-line));
+  --sk-header-logo: var(--brand-700);
+  --sk-header-text: rgb(var(--sk-text-1));
+  --sk-header-chip-bg: rgb(var(--sk-surface-2));
+  --sk-header-chip-hover: rgb(var(--sk-surface));
+  --sk-header-chip-line: rgb(var(--sk-line));
+  --sk-header-chip-text: rgb(var(--sk-text-2));
+  --sk-header-gear-bg: rgb(var(--sk-ink));
+  --sk-header-gear-text: #ffffff;
+}
+
+/* ---------- 다크: 어두운 교실·저녁 ---------- */
+[data-skin="dark"] {
+  --sk-page: 15 23 42;
+  --sk-page-image: radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.12), transparent 55%);
+  --sk-surface: 30 41 59;
+  --sk-surface-2: 36 48 68;
+  --sk-surface-3: 43 58 82;
+  --sk-surface-4: 59 75 102;
+  --sk-surface-5: 74 91 120;
+  --sk-line: 51 66 90;
+  --sk-line-2: 71 90 120;
+  --sk-line-3: 100 116 139;
+  --sk-text-1: 241 245 249;
+  --sk-text-2: 226 232 240;
+  --sk-text-3: 203 213 225;
+  --sk-text-4: 163 177 198;
+  --sk-text-5: 124 138 163;
+  --sk-text-6: 91 105 128;
+  --sk-ink: 11 18 32;
+  --sk-ink-2: 6 11 22;
+  --sk-overlay: 0 0 0;
+  --sk-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --sk-shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.5);
+  --sk-shadow-lg: 0 10px 18px -3px rgba(0, 0, 0, 0.55);
+  --sk-shadow-xl: 0 20px 28px -5px rgba(0, 0, 0, 0.6);
+  --sk-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+  --sk-header-bg: rgba(15, 23, 42, 0.85);
+  --sk-header-image: linear-gradient(90deg, rgba(99, 102, 241, 0.12), transparent 40%);
+  --sk-header-line: rgba(255, 255, 255, 0.08);
+  --sk-header-logo: var(--brand-400);
+  --sk-header-chip-bg: rgba(255, 255, 255, 0.06);
+  --sk-header-chip-hover: rgba(255, 255, 255, 0.12);
+  --sk-header-chip-line: rgba(255, 255, 255, 0.1);
+  --sk-header-chip-text: #dbe3ee;
+  --sk-header-gear-bg: var(--brand-600);
+}
+
+/* ---------- 칠판: 진한 녹색 바탕에 크림색 판 ---------- */
+[data-skin="chalk"] {
+  --sk-page: 23 58 46;
+  --sk-page-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 6px);
+  --sk-surface: 251 247 236;
+  --sk-surface-2: 244 238 221;
+  --sk-surface-3: 236 228 207;
+  --sk-surface-4: 223 213 185;
+  --sk-surface-5: 205 192 159;
+  --sk-line: 216 207 179;
+  --sk-line-2: 188 174 140;
+  --sk-line-3: 154 140 104;
+  --sk-text-1: 42 40 35;
+  --sk-text-2: 62 59 51;
+  --sk-text-3: 90 86 74;
+  --sk-text-4: 119 114 95;
+  --sk-text-5: 154 148 126;
+  --sk-text-6: 184 178 157;
+  --sk-ink: 31 58 48;
+  --sk-ink-2: 20 40 32;
+  --sk-overlay: 10 30 22;
+  --sk-r1: 0.5rem;
+  --sk-r2: 0.65rem;
+  --sk-r3: 0.85rem;
+  --sk-shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.15);
+  --sk-shadow-md: 0 2px 0 rgba(0, 0, 0, 0.18);
+  --sk-shadow-lg: 0 4px 0 rgba(0, 0, 0, 0.22);
+  --sk-shadow-xl: 0 6px 0 rgba(0, 0, 0, 0.25);
+  --sk-shadow-2xl: 0 12px 24px rgba(0, 0, 0, 0.45);
+  --sk-saturate: 0.85;
+  /* 머리글: 칠판 위 나무틀 느낌의 진한 녹색 띠 */
+  --sk-header-bg: #10261e;
+  --sk-header-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
+  --sk-header-line: rgba(255, 255, 255, 0.12);
+  --sk-header-logo: #f6e7b8;
+  --sk-header-text: #fbf7ec;
+  --sk-header-chip-bg: rgba(255, 255, 255, 0.08);
+  --sk-header-chip-hover: rgba(255, 255, 255, 0.16);
+  --sk-header-chip-line: rgba(255, 255, 255, 0.14);
+  --sk-header-chip-text: #efe6cf;
+  --sk-header-gear-bg: #f6e7b8;
+  --sk-header-gear-text: #10261e;
+}
+
+/* ---------- 파스텔: 저학년 교실 ---------- */
+[data-skin="pastel"] {
+  --sk-page: 255 245 250;
+  --sk-page-image: radial-gradient(rgba(244, 114, 182, 0.18) 1.2px, transparent 1.2px);
+  --sk-page-size: 22px 22px;
+  --sk-surface: 255 255 255;
+  --sk-surface-2: 253 242 248;
+  --sk-surface-3: 252 231 243;
+  --sk-surface-4: 249 209 230;
+  --sk-surface-5: 244 181 211;
+  --sk-line: 249 209 230;
+  --sk-line-2: 242 169 204;
+  --sk-line-3: 224 127 174;
+  --sk-text-1: 74 47 82;
+  --sk-text-2: 92 63 102;
+  --sk-text-3: 122 95 133;
+  --sk-text-4: 155 131 165;
+  --sk-text-5: 189 168 197;
+  --sk-text-6: 216 201 221;
+  --sk-ink: 107 63 122;
+  --sk-ink-2: 85 48 95;
+  --sk-overlay: 90 50 100;
+  --sk-r1: 1rem;
+  --sk-r2: 1.5rem;
+  --sk-r3: 2rem;
+  --sk-shadow-sm: 0 2px 6px rgba(236, 72, 153, 0.08);
+  --sk-shadow-md: 0 6px 14px rgba(236, 72, 153, 0.12);
+  --sk-shadow-lg: 0 12px 24px rgba(236, 72, 153, 0.14);
+  --sk-shadow-xl: 0 18px 32px rgba(236, 72, 153, 0.16);
+  --sk-shadow-2xl: 0 24px 48px rgba(120, 60, 130, 0.28);
+  --sk-header-bg: rgba(255, 255, 255, 0.85);
+  --sk-header-image: linear-gradient(90deg, rgba(244, 114, 182, 0.14), rgba(167, 139, 250, 0.12));
+  --sk-header-line: #f9d1e6;
+  --sk-header-logo: #db2777;
+  --sk-header-chip-bg: #fff0f7;
+  --sk-header-chip-hover: #ffffff;
+  --sk-header-chip-line: #f9d1e6;
+  --sk-header-chip-text: #7a4a8a;
+  --sk-header-gear-bg: #ec4899;
+}
+
+/* ---------- 종이 노트: 따뜻한 베이지 + 명조 제목 ---------- */
+[data-skin="paper"] {
+  --sk-page: 237 230 214;
+  --sk-page-image: repeating-linear-gradient(0deg, transparent 0 31px, rgba(120, 100, 70, 0.08) 31px 32px);
+  --sk-surface: 255 253 247;
+  --sk-surface-2: 248 243 231;
+  --sk-surface-3: 241 234 217;
+  --sk-surface-4: 229 220 198;
+  --sk-surface-5: 211 199 171;
+  --sk-line: 226 217 195;
+  --sk-line-2: 201 188 159;
+  --sk-line-3: 169 155 124;
+  --sk-text-1: 58 49 38;
+  --sk-text-2: 76 66 53;
+  --sk-text-3: 106 94 76;
+  --sk-text-4: 137 124 103;
+  --sk-text-5: 171 159 138;
+  --sk-text-6: 201 191 174;
+  --sk-ink: 58 49 38;
+  --sk-ink-2: 42 35 25;
+  --sk-overlay: 50 40 25;
+  --sk-r1: 0.5rem;
+  --sk-r2: 0.75rem;
+  --sk-r3: 1rem;
+  --sk-shadow-sm: 0 1px 2px rgba(60, 45, 20, 0.08);
+  --sk-shadow-md: 0 3px 8px rgba(60, 45, 20, 0.12);
+  --sk-shadow-lg: 0 8px 16px rgba(60, 45, 20, 0.14);
+  --sk-shadow-xl: 0 14px 24px rgba(60, 45, 20, 0.16);
+  --sk-shadow-2xl: 0 20px 40px rgba(60, 45, 20, 0.3);
+  --sk-font: "Nanum Gothic", sans-serif;
+  --sk-font-heading: "Nanum Myeongjo", serif;
+  --sk-saturate: 0.8;
+  --sk-header-bg: rgba(255, 253, 247, 0.9);
+  --sk-header-line: #d6c9ab;
+  --sk-header-logo: #7c4a1e;
+  --sk-header-chip-bg: #f6efdf;
+  --sk-header-chip-hover: #fffdf7;
+  --sk-header-chip-line: #d6c9ab;
+  --sk-header-chip-text: #5b4a33;
+  --sk-header-gear-bg: #7c4a1e;
+}
+
+
+/* ---------- 오션: 깊은 바다색 다크 + 하늘색 강조 ---------- */
+[data-skin="ocean"] {
+  --sk-page: 11 37 69;
+  --sk-page-image: radial-gradient(ellipse at 70% 0%, rgba(56, 189, 248, 0.18), transparent 50%), radial-gradient(ellipse at 0% 100%, rgba(14, 116, 144, 0.25), transparent 55%);
+  --sk-surface: 19 49 92;
+  --sk-surface-2: 24 58 106;
+  --sk-surface-3: 30 68 120;
+  --sk-surface-4: 42 84 140;
+  --sk-surface-5: 58 104 164;
+  --sk-line: 40 80 130;
+  --sk-line-2: 62 104 158;
+  --sk-line-3: 94 138 190;
+  --sk-text-1: 234 244 255;
+  --sk-text-2: 214 230 248;
+  --sk-text-3: 182 206 232;
+  --sk-text-4: 148 178 212;
+  --sk-text-5: 110 142 180;
+  --sk-text-6: 80 112 150;
+  --sk-ink: 6 24 48;
+  --sk-ink-2: 3 14 30;
+  --sk-overlay: 3 14 30;
+  --sk-r1: 0.9rem; --sk-r2: 1.2rem; --sk-r3: 1.6rem;
+  --sk-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --sk-shadow-md: 0 6px 14px -4px rgba(0, 0, 0, 0.5);
+  --sk-shadow-lg: 0 14px 28px -8px rgba(0, 0, 0, 0.55);
+  --sk-shadow-xl: 0 22px 40px -10px rgba(0, 0, 0, 0.6);
+  --sk-shadow-2xl: 0 30px 60px -14px rgba(0, 0, 0, 0.75);
+  --sk-header-bg: rgba(8, 28, 54, 0.85);
+  --sk-header-image: linear-gradient(90deg, rgba(56, 189, 248, 0.16), transparent 45%);
+  --sk-header-line: rgba(125, 211, 252, 0.15);
+  --sk-header-logo: #7dd3fc;
+  --sk-header-chip-bg: rgba(125, 211, 252, 0.08);
+  --sk-header-chip-hover: rgba(125, 211, 252, 0.16);
+  --sk-header-chip-line: rgba(125, 211, 252, 0.16);
+  --sk-header-chip-text: #dbeafe;
+  --sk-header-gear-bg: #0ea5e9;
+}
+
+/* ---------- 모노: 흑백 미니멀, 얇은 선, 작은 모서리, 그림자 없음 ---------- */
+[data-skin="mono"] {
+  --sk-page: 236 236 239;
+  --sk-page-image: none;
+  --sk-surface: 255 255 255;
+  --sk-surface-2: 247 247 248;
+  --sk-surface-3: 240 240 242;
+  --sk-surface-4: 228 228 231;
+  --sk-surface-5: 212 212 216;
+  --sk-line: 220 220 224;
+  --sk-line-2: 196 196 202;
+  --sk-line-3: 150 150 158;
+  --sk-text-1: 17 17 20;
+  --sk-text-2: 39 39 45;
+  --sk-text-3: 82 82 91;
+  --sk-text-4: 113 113 122;
+  --sk-text-5: 161 161 170;
+  --sk-text-6: 200 200 206;
+  --sk-ink: 24 24 27;
+  --sk-ink-2: 9 9 11;
+  --sk-overlay: 24 24 27;
+  --sk-r1: 0.45rem; --sk-r2: 0.6rem; --sk-r3: 0.8rem;
+  --sk-shadow-sm: none;
+  --sk-shadow-md: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --sk-shadow-lg: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 8px 20px -12px rgba(0, 0, 0, 0.25);
+  --sk-shadow-xl: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 12px 28px -12px rgba(0, 0, 0, 0.3);
+  --sk-shadow-2xl: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 24px 48px -16px rgba(0, 0, 0, 0.35);
+  --sk-font: "Nanum Gothic", sans-serif;
+  --sk-font-heading: "Nanum Gothic", sans-serif;
+  --sk-saturate: 0.7;
+  --sk-header-bg: rgba(255, 255, 255, 0.92);
+  --sk-header-line: #dcdce0;
+  --sk-header-logo: #111114;
+  --sk-header-chip-bg: #f4f4f5;
+  --sk-header-chip-hover: #ffffff;
+  --sk-header-chip-line: #dcdce0;
+  --sk-header-chip-text: #27272d;
+  --sk-header-gear-bg: #18181b;
+}
+[data-skin="mono"] #toolbar-tools > button { background-image: none !important; background-color: rgb(var(--sk-ink)) !important; border-color: transparent; }
+
+/* ---------- 라벤더: 연보라, 은은한 그라데이션 ---------- */
+[data-skin="lavender"] {
+  --sk-page: 240 236 250;
+  --sk-page-image: linear-gradient(160deg, rgba(196, 181, 253, 0.35), rgba(255, 255, 255, 0) 45%, rgba(165, 180, 252, 0.25));
+  --sk-surface: 255 255 255;
+  --sk-surface-2: 247 244 255;
+  --sk-surface-3: 238 233 254;
+  --sk-surface-4: 221 214 254;
+  --sk-surface-5: 196 181 253;
+  --sk-line: 228 222 252;
+  --sk-line-2: 200 190 245;
+  --sk-line-3: 160 145 220;
+  --sk-text-1: 46 36 74;
+  --sk-text-2: 62 52 92;
+  --sk-text-3: 88 78 120;
+  --sk-text-4: 118 108 150;
+  --sk-text-5: 152 143 182;
+  --sk-text-6: 190 182 214;
+  --sk-ink: 67 56 202;
+  --sk-ink-2: 55 48 163;
+  --sk-overlay: 46 36 74;
+  --sk-r1: 0.9rem; --sk-r2: 1.25rem; --sk-r3: 1.75rem;
+  --sk-shadow-sm: 0 1px 3px rgba(91, 70, 170, 0.08);
+  --sk-shadow-md: 0 6px 16px -6px rgba(91, 70, 170, 0.2);
+  --sk-shadow-lg: 0 14px 28px -10px rgba(91, 70, 170, 0.25);
+  --sk-shadow-xl: 0 20px 40px -12px rgba(91, 70, 170, 0.28);
+  --sk-shadow-2xl: 0 28px 56px -16px rgba(60, 40, 120, 0.4);
+  --sk-header-bg: rgba(255, 255, 255, 0.8);
+  --sk-header-image: linear-gradient(90deg, rgba(167, 139, 250, 0.18), rgba(129, 140, 248, 0.1) 60%, transparent);
+  --sk-header-line: #ddd6fe;
+  --sk-header-logo: #6d28d9;
+  --sk-header-chip-bg: #f5f3ff;
+  --sk-header-chip-hover: #ffffff;
+  --sk-header-chip-line: #ddd6fe;
+  --sk-header-chip-text: #4c3d78;
+  --sk-header-gear-bg: #7c3aed;
+}
+
+/* ---------- 그라파이트: 차분한 흑연색 다크, 얇은 하이라이트 ---------- */
+[data-skin="graphite"] {
+  --sk-page: 20 21 24;
+  --sk-page-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 30%);
+  --sk-surface: 32 34 38;
+  --sk-surface-2: 38 40 45;
+  --sk-surface-3: 46 48 54;
+  --sk-surface-4: 58 61 68;
+  --sk-surface-5: 74 78 86;
+  --sk-line: 52 55 62;
+  --sk-line-2: 72 76 84;
+  --sk-line-3: 108 113 122;
+  --sk-text-1: 240 241 243;
+  --sk-text-2: 220 222 226;
+  --sk-text-3: 190 193 199;
+  --sk-text-4: 156 160 168;
+  --sk-text-5: 120 124 132;
+  --sk-text-6: 90 94 102;
+  --sk-ink: 12 13 15;
+  --sk-ink-2: 6 6 8;
+  --sk-overlay: 0 0 0;
+  --sk-r1: 0.6rem; --sk-r2: 0.85rem; --sk-r3: 1.1rem;
+  --sk-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --sk-shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --sk-shadow-lg: 0 10px 20px -6px rgba(0, 0, 0, 0.65);
+  --sk-shadow-xl: 0 18px 32px -8px rgba(0, 0, 0, 0.7);
+  --sk-shadow-2xl: 0 28px 56px -12px rgba(0, 0, 0, 0.85);
+  --sk-font: "Nanum Gothic", sans-serif;
+  --sk-saturate: 0.9;
+  --sk-header-bg: rgba(20, 21, 24, 0.88);
+  --sk-header-image: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+  --sk-header-line: rgba(255, 255, 255, 0.07);
+  --sk-header-logo: #f0f1f3;
+  --sk-header-text: #f0f1f3;
+  --sk-header-chip-bg: rgba(255, 255, 255, 0.05);
+  --sk-header-chip-hover: rgba(255, 255, 255, 0.1);
+  --sk-header-chip-line: rgba(255, 255, 255, 0.08);
+  --sk-header-chip-text: #d5d8de;
+  --sk-header-gear-bg: #f0f1f3;
+  --sk-header-gear-text: #141518;
+}
+
+
+/* ---------- 선셋: 따뜻한 복숭아·코랄 그라데이션 ---------- */
+[data-skin="sunset"] {
+  --sk-page: 255 241 236;
+  --sk-page-image: linear-gradient(160deg, rgba(251, 146, 60, 0.22), rgba(255, 255, 255, 0) 45%, rgba(244, 63, 94, 0.16));
+  --sk-surface: 255 255 255;
+  --sk-surface-2: 255 245 240;
+  --sk-surface-3: 255 233 224;
+  --sk-surface-4: 254 215 201;
+  --sk-surface-5: 253 186 159;
+  --sk-line: 253 217 204;
+  --sk-line-2: 248 181 158;
+  --sk-line-3: 230 144 111;
+  --sk-text-1: 74 44 36;
+  --sk-text-2: 94 58 48;
+  --sk-text-3: 125 86 72;
+  --sk-text-4: 159 122 108;
+  --sk-text-5: 193 161 150;
+  --sk-text-6: 220 198 190;
+  --sk-ink: 124 45 18;
+  --sk-ink-2: 90 31 10;
+  --sk-overlay: 74 44 36;
+  --sk-r1: 0.85rem; --sk-r2: 1.15rem; --sk-r3: 1.5rem;
+  --sk-shadow-sm: 0 1px 3px rgba(194, 65, 12, 0.08);
+  --sk-shadow-md: 0 6px 16px -6px rgba(194, 65, 12, 0.18);
+  --sk-shadow-lg: 0 14px 28px -10px rgba(194, 65, 12, 0.22);
+  --sk-shadow-xl: 0 20px 40px -12px rgba(194, 65, 12, 0.26);
+  --sk-shadow-2xl: 0 28px 56px -16px rgba(120, 40, 20, 0.4);
+  --sk-header-bg: rgba(255, 255, 255, 0.82);
+  --sk-header-image: linear-gradient(90deg, rgba(251, 146, 60, 0.22), rgba(244, 63, 94, 0.12) 60%, transparent);
+  --sk-header-line: #fdd9cc;
+  --sk-header-logo: #ea580c;
+  --sk-header-chip-bg: #fff5f0;
+  --sk-header-chip-hover: #ffffff;
+  --sk-header-chip-line: #fdd9cc;
+  --sk-header-chip-text: #7d4a3a;
+  --sk-header-gear-bg: #f97316;
+}
+
+/* ============ 색·모서리·그림자 유틸리티는 tailwind.config.js 에서 이 변수들로 연결됨 ============ */
+body { background-color: rgb(var(--sk-page)); background-image: var(--sk-page-image); background-size: var(--sk-page-size, auto); font-family: var(--sk-font); color: rgb(var(--sk-text-1)); }
+h1, h2, h3 { font-family: var(--sk-font-heading); }
+/* 어두운 상자(bg-slate-800) 위의 옅은 글씨는 어느 테마에서나 밝게 */
+.bg-slate-800 .text-slate-400, .bg-slate-900 .text-slate-400 { color: #94a3b8; }
+
+/* 입력칸·선택칸: 테마 색을 따르게 */
+/* :where() 로 우선순위를 0 으로 낮춰, 색 클래스(bg-red-100 등)가 있으면 그쪽이 이김 */
+:where(input:not([type="checkbox"]):not([type="range"]):not([type="color"]), select, textarea) {
+  color: rgb(var(--sk-text-1));
+  background-color: rgb(var(--sk-surface));
+  border-color: rgb(var(--sk-line-2));
+}
+:where(input, textarea)::placeholder { color: rgb(var(--sk-text-5)); }
+select option { color: #1e293b; background: #ffffff; }
+input[type="range"] { background: transparent; }
+
+/* 도구 버튼(그라데이션) 채도 */
+#toolbar-tools button { filter: saturate(var(--sk-saturate)); }
+
+/* 칠판 테마: 판 테두리를 조금 두껍게 */
+[data-skin="chalk"] .panel-bg { border-width: 2px; }
+/* 다크 테마: 팝업 노트 종이색은 그대로 두되 글자만 진하게 */
+[data-skin="dark"] #floating-popup-note, [data-skin="ocean"] #floating-popup-note, [data-skin="graphite"] #floating-popup-note { color: #1e293b; }
+
+/* 테마 선택 카드 (환경설정) */
+.skin-card { border: 2px solid rgb(var(--sk-line)); border-radius: var(--sk-r1); padding: 0.5rem; cursor: pointer; background: rgb(var(--sk-surface)); transition: transform 0.15s, border-color 0.15s; text-align: center; }
+.skin-card:hover { transform: translateY(-2px); }
+.skin-card.active { border-color: var(--brand-500); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-500) 25%, transparent); }
+.skin-card .swatch { height: 2.75rem; border-radius: 0.5rem; display: flex; align-items: flex-end; gap: 3px; padding: 4px; margin-bottom: 0.35rem; }
+.skin-card .swatch span { flex: 1; height: 55%; border-radius: 3px; }
+.skin-card .name { font-size: 0.8rem; font-weight: 700; color: rgb(var(--sk-text-2)); }

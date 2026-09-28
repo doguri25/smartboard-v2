@@ -97,7 +97,7 @@
 - v2.5.2 (지금): 깃허브 자동 업데이트 연결 — 저장소 https://github.com/doguri25/smartboard-v2
   - 앱의 업데이트 주소 기본값을 `https://github.com/doguri25/smartboard-v2/releases/latest/download/latest.json` 으로 내장 (`src/updater.ts` DEFAULT_UPDATE_URL).
     환경설정의 주소 칸은 비워 두면 기본값을 씀
-  - `.github/workflows/build-windows.yml`: `v*` 태그를 push 하면 윈도우 러너에서 빌드 → 릴리스 생성 → setup.exe / .sig / latest.json 게시 (tauri-action).
+  - `.github/workflows/build-windows.yml`: main 에 push 된 버전의 릴리스가 없으면 윈도우 러너에서 빌드 → 릴리스 생성 → setup.exe / .sig / latest.json 게시 (tauri-action).
     릴리스 본문은 `scripts/release-notes.mjs` 가 changelog 에서 만듦
 
 ## 개발 PC 준비 (macOS, 한 번만)
@@ -122,9 +122,9 @@ npm run tauri dev
 새 버전 내는 순서:
 ```
 node scripts/bump.mjs 2.6.0 "제목" "변경 사항 1" "변경 사항 2"
-git add -A && git commit -m "v2.6.0"
-git tag v2.6.0 && git push && git push --tags
+git add -A && git commit -m "v2.6.0" && git push
 ```
+main 에 올라온 버전의 릴리스가 아직 없으면 워크플로가 알아서 빌드해 `v2.6.0` 릴리스를 만듭니다(이미 있는 버전이면 건너뜀).
 몇 분 뒤 Releases 에 `SmartBoard_2.6.0_x64-setup.exe`, `.sig`, `latest.json` 이 올라가고,
 설치된 앱은 시작할 때(그리고 6시간마다) 확인해 안내 띠를 띄움 → [지금 업데이트] → 내려받기 → 설치 → 재시작.
 로고를 눌러 나오는 버전 창의 [업데이트 확인] 으로 바로 확인할 수도 있음.

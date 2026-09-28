@@ -78,13 +78,27 @@ jobs:
             echo 'NOTES_EOF'
           } >> "$GITHUB_OUTPUT"
 
+      - name: 서명키 정리 (붙여넣을 때 섞인 공백·줄바꿈 제거)
+        if: steps.check.outputs.skip != 'true'
+        shell: bash
+        env:
+          RAW_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          KEY=$(printf '%s' "$RAW_KEY" | tr -d '[:space:]')
+          if [ -z "$KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY 시크릿이 비어 있습니다. 저장소 Settings → Secrets and variables → Actions 에 updater.key 내용을 등록하세요."
+            exit 1
+          fi
+          echo "::add-mask::$KEY"
+          echo "TAURI_SIGNING_PRIVATE_KEY=$KEY" >> "$GITHUB_ENV"
+          echo "서명키 길이: ${#KEY}"
+
       - name: Tauri 빌드 + 릴리스 올리기 (setup.exe · .sig · latest.json)
         if: steps.check.outputs.skip != 'true'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 자동 업데이트 서명키 (Settings → Secrets → Actions 에 updater.key 내용을 TAURI_SIGNING_PRIVATE_KEY 로 등록)
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          # 자동 업데이트 서명키: 위 단계에서 정리한 TAURI_SIGNING_PRIVATE_KEY 환경변수를 그대로 씀
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
         with:
           tagName: v__VERSION__
